@@ -30,9 +30,24 @@ export function queueRoutes() {
         sort: { 'queue.priorityScore': -1, arrivalAt: 1 },
       });
 
+      // Capacity debt travels with the snapshot as well as with socket patches.
+      // Without it a client that has only done the initial load would have to
+      // render 0 — a confident-looking number whose real meaning is "not known
+      // yet", which is precisely the kind of false authority this system exists
+      // to avoid.
+      const capacityDebtMinutes = Math.round(
+        encounters.reduce((sum, encounter) => {
+          const { decayStatus, safeWaitMinutes, decayRatio } = encounter.queue ?? {};
+          if (decayStatus !== 'red' || !Number.isFinite(safeWaitMinutes)) return sum;
+          const waited = (decayRatio ?? 0) * safeWaitMinutes;
+          return sum + Math.max(0, waited - safeWaitMinutes);
+        }, 0),
+      );
+
       res.json({
         encounters,
         count: encounters.length,
+        capacityDebtMinutes,
         cursor: new Date().toISOString(),
       });
     } catch (error) {

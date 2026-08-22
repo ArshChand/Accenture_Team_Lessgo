@@ -43,6 +43,16 @@ const CAP = {
   MODIFIER_FLOOR: ESI.EMERGENT,
 };
 
+/** Age phrased at the precision the paediatric rules actually turn on. */
+function describeInfantAge(ageYears) {
+  const days = ageYears * 365.25;
+  if (days < 28) return `${Math.max(0, Math.round(days))} days old`;
+  const weeks = Math.round(days / 7);
+  if (weeks < 14) return `${weeks} weeks old`;
+  const months = Math.round(ageYears * 12);
+  return `${months} month${months === 1 ? '' : 's'} old`;
+}
+
 const has = (set, symptom) => set.has(symptom);
 const hasAny = (set, list) => list.some((s) => set.has(s));
 const countTrue = (...values) => values.filter(Boolean).length;
@@ -471,7 +481,10 @@ export const RULES = [
       if (!Number.isFinite(c.ageYears) || c.ageYears >= 0.25) return null;
       if (!Number.isFinite(c.temp) || c.temp < 38.0) return null;
       return {
-        evidence: `Temperature ${c.temp}°C at ${Math.round(c.ageYears * 12)} months`,
+        // Reported in weeks below three months: this rule turns on exactly how
+        // young the infant is, so rounding a six-week-old to "1 months" both
+        // reads wrong and hides the margin the nurse is checking.
+        evidence: `Temperature ${c.temp}°C at ${describeInfantAge(c.ageYears)}`,
         rationale:
           'Any fever under 3 months mandates a full septic screen regardless of how well the infant appears. Appearance is not a reliable discriminator at this age.',
       };

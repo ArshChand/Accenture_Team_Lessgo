@@ -1,0 +1,144 @@
+.board {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.board--empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--ink-muted);
+}
+
+.board--empty p {
+  margin: 0 0 4px;
+}
+
+.board__hint {
+  font-size: 12px;
+}
+
+.board__mode {
+  margin: 0;
+  padding: 8px 14px;
+  background: var(--wash-serious);
+  border-bottom: 1px solid var(--hairline);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.board__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.board__table th {
+  text-align: left;
+  padding: 9px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--page);
+}
+
+.board__table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: middle;
+}
+
+.board__row {
+  cursor: pointer;
+  /* The row wash is a secondary cue only; the badge and the decay label carry
+     the actual signal, so the board stays readable without colour. */
+  border-left: 3px solid transparent;
+}
+
+.board__row:hover {
+  background: var(--accent-wash);
+}
+
+.board__row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.board__row.is-selected {
+  background: var(--accent-wash);
+  border-left-color: var(--accent);
+}
+
+.board__row--amber {
+  background: var(--wash-warning);
+}
+.board__row--red {
+  background: var(--wash-critical);
+}
+
+.board__ref {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.board__complaint {
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.board__age {
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/* Only the band name is capitalised — capitalising the whole line turns
+   "6 wks" into "6 Wks". */
+.board__band {
+  text-transform: capitalize;
+}
+
+.board__suggestion {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.board__by {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+}
+
+.board__by--nurse {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .board__table thead {
+    display: none;
+  }
+  .board__table,
+  .board__table tbody,
+  .board__table tr,
+  .board__table td {
+    display: block;
+    width: 100%;
+  }
+  .board__table tr {
+    padding: 6px 0;
+  }
+  .board__table td {
+    border-bottom: none;
+    padding: 4px 14px;
+  }
+  .board__row {
+    border-bottom: 1px solid var(--hairline);
+  }
+}
