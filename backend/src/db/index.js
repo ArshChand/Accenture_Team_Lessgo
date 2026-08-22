@@ -13,6 +13,7 @@ const MODEL_KEYS = [
   'ConsentRecord',
   'ModelRegistry',
   'SurgeEvent',
+  'SiteProtocol',
 ];
 
 /**
@@ -34,6 +35,7 @@ const alias = {
   ConsentRecord: 'consents',
   ModelRegistry: 'modelRegistry',
   SurgeEvent: 'surgeEvents',
+  SiteProtocol: 'siteProtocols',
 };
 
 function buildRepositories(Repo) {

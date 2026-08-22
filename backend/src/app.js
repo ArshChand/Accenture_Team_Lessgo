@@ -2,12 +2,57 @@ import cors from 'cors';
 import express from 'express';
 import { config } from './config/index.js';
 import { getDriver, isConnected, repositories } from './db/index.js';
+import { PROTOCOL_GUARDRAILS, validateProtocol } from './clinical/protocol.js';
+import {
+  getActiveProtocol,
+  getActiveSiteId,
+  listBundledProtocols,
+  loadBundledProtocol,
+} from './services/protocolService.js';
 
 export function createApp() {
   const app = express();
 
   app.use(cors());
   app.use(express.json({ limit: '1mb' }));
+
+  /**
+   * The clinical protocol in force, exposed so a nurse or auditor can see exactly
+   * which thresholds produced a score. A safety table that cannot be inspected at
+   * run time is not really reviewable.
+   */
+  app.get('/api/protocol', (req, res) => {
+    const protocol = getActiveProtocol();
+    res.json({
+      siteId: getActiveSiteId(),
+      siteName: protocol.siteName,
+      siteType: protocol.siteType,
+      version: protocol.version,
+      description: protocol.description,
+      protocol,
+      guardrails: PROTOCOL_GUARDRAILS,
+      availableSites: listBundledProtocols(),
+    });
+  });
+
+  /**
+   * Dry-run a protocol change. A hospital can see what its overrides would be
+   * rejected for before anything is activated, rather than discovering a bad
+   * threshold at the bedside.
+   */
+  app.post('/api/protocol/validate', (req, res) => {
+    const overrides = req.body?.overrides ?? {};
+    const { valid, errors } = validateProtocol({ ...getActiveProtocol(), ...overrides });
+    res.status(valid ? 200 : 422).json({ valid, errors });
+  });
+
+  app.get('/api/protocol/:siteId', (req, res) => {
+    const { siteId } = req.params;
+    if (!listBundledProtocols().includes(siteId)) {
+      return res.status(404).json({ error: 'unknown_site', siteId });
+    }
+    return res.json(loadBundledProtocol(siteId));
+  });
 
   app.get('/api/health', async (req, res) => {
     const payload = {

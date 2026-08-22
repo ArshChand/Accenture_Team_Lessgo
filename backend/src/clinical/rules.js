@@ -1,5 +1,6 @@
 import { AGE_BAND, ESI, isGeriatric, isPaediatric } from './constants.js';
-import { compareToBaseline, thresholdsFor } from './ageBands.js';
+import { compareToBaseline } from './ageBands.js';
+import { getDefaultProtocol, ruleOverrideWith, thresholdsWith } from './protocol.js';
 import { valueOf } from './observation.js';
 import {
   ATYPICAL_CARDIAC_SYMPTOMS,
@@ -51,10 +52,17 @@ const countTrue = (...values) => values.filter(Boolean).length;
  * the rules read. Absent values stay `undefined` throughout — never coerced to 0,
  * which would read as profound bradycardia rather than as "we did not measure it".
  */
-export function buildRuleContext({ encounter, patient = {}, vitals = {} }) {
+let cachedDefaultProtocol = null;
+const referenceProtocol = () => {
+  cachedDefaultProtocol ??= getDefaultProtocol();
+  return cachedDefaultProtocol;
+};
+
+export function buildRuleContext({ encounter, patient = {}, vitals = {}, protocol }) {
+  const activeProtocol = protocol ?? referenceProtocol();
   const ageYears = encounter?.age?.ageYears;
   const band = encounter?.age?.band ?? AGE_BAND.ADULT;
-  const thresholds = thresholdsFor(band, ageYears);
+  const thresholds = thresholdsWith(activeProtocol, band, ageYears);
 
   const symptoms = new Set(encounter?.intake?.extraction?.symptoms ?? []);
   const negations = new Set(encounter?.intake?.extraction?.negations ?? []);
@@ -112,6 +120,9 @@ export function buildRuleContext({ encounter, patient = {}, vitals = {} }) {
     hasPriorRecord: Boolean(patient?.hasPriorRecord),
     isPregnant: conditions.has(RISK_CONDITION.PREGNANCY) || symptoms.has(SYMPTOM.PREGNANCY_RELATED),
     viaProxy: Boolean(encounter?.intake?.viaProxy),
+
+    /** Carried so evaluateRules can apply this site's rule overrides. */
+    protocol: activeProtocol,
   };
 }
 
@@ -807,9 +818,30 @@ export const RULES = [
  *   positive judgement that the patient is non-urgent.
  */
 export function evaluateRules(context) {
+  const protocol = context.protocol ?? referenceProtocol();
   const fired = [];
   let floor = ESI.NON_URGENT;
   let hardRedFlag = false;
+
+  /**
+   * Apply a site's override for one rule.
+   *
+   * An override may only make a rule MORE urgent — the result is the most urgent
+   * of the rule's own conclusion and the site's configured level. Site
+   * configuration exists to let a hospital adapt to local reality (no ventilator,
+   * a 90-minute transfer, a single clinician overnight); it must not become a way
+   * to quietly soften a safety rule. Disabling a rule outright is possible, but
+   * `validateProtocol` refuses it for the rules that prevent a fatal miss.
+   */
+  const applyOverride = (code, impliedESI) => {
+    const override = ruleOverrideWith(protocol, code);
+    if (!override) return { skip: false, impliedESI };
+    if (override.enabled === false) return { skip: true, impliedESI };
+    return {
+      skip: false,
+      impliedESI: Math.min(impliedESI, override.impliedESI ?? ESI.NON_URGENT),
+    };
+  };
 
   for (const rule of RULES) {
     if ((rule.kind ?? 'floor') !== 'floor') continue;
@@ -817,7 +849,10 @@ export function evaluateRules(context) {
     const result = rule.evaluate(context);
     if (!result) continue;
 
-    const impliedESI = result.impliedESI ?? rule.impliedESI;
+    const decided = applyOverride(rule.code, result.impliedESI ?? rule.impliedESI);
+    if (decided.skip) continue;
+    const impliedESI = decided.impliedESI;
+
     fired.push({
       code: rule.code,
       label: rule.label,
@@ -834,13 +869,16 @@ export function evaluateRules(context) {
   }
 
   // Modifiers apply after floors resolve, and cannot reach ESI 1.
+  const modifierFloor = protocol.confidence?.escalationFloorESI ?? CAP.MODIFIER_FLOOR;
+
   for (const rule of RULES) {
     if (rule.kind !== 'modifier') continue;
+    if (ruleOverrideWith(protocol, rule.code)?.enabled === false) continue;
 
     const result = rule.evaluate(context);
     if (!result) continue;
 
-    const escalated = Math.max(CAP.MODIFIER_FLOOR, floor - (rule.escalateBy ?? 1));
+    const escalated = Math.max(modifierFloor, floor - (rule.escalateBy ?? 1));
     fired.push({
       code: rule.code,
       label: rule.label,

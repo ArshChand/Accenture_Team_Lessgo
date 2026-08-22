@@ -2,6 +2,7 @@ import http from 'node:http';
 import { createApp } from './app.js';
 import { config } from './config/index.js';
 import { connectDatabase, disconnectDatabase } from './db/index.js';
+import { activateProtocol } from './services/protocolService.js';
 
 async function main() {
   const { driver, uri } = await connectDatabase();
@@ -9,6 +10,11 @@ async function main() {
   if (driver === 'memory') {
     console.log('[db] in-memory driver: schemas are enforced, data is not persisted across restarts');
   }
+
+  // An invalid clinical protocol stops the service. A half-applied safety table is
+  // more dangerous than a refused start.
+  const { protocol, source, siteId } = await activateProtocol(process.env.SITE_ID ?? 'default');
+  console.log(`[protocol] "${protocol.siteName}" (${siteId}, v${protocol.version}) loaded from ${source}`);
 
   const app = createApp();
   const server = http.createServer(app);
