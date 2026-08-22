@@ -262,4 +262,29 @@ describe('repository: updates and isolation', () => {
     const result = await repositories.encounters.updateById(patient._id, { currentESI: 2 });
     assert.equal(result, null);
   });
+
+  it('rejects a mix of a plain field and an operator in one update, rather than silently dropping the plain field', async () => {
+    const encounter = await createOne();
+
+    // This shape once passed silently: normalizeUpdate saw the $inc key, assumed
+    // the whole object was already in operator form, and 'queue.reassessCount'
+    // — sorry, 'queue.lastReassessedAt' here — was dropped without error, which
+    // is exactly how a wait-clock reset went missing in production.
+    await assert.rejects(
+      () =>
+        repositories.encounters.updateById(encounter._id, {
+          'queue.reassessCount': 1,
+          $inc: { 'queue.priorityScore': 1 },
+        }),
+      /Cannot mix a plain field with an update operator/,
+    );
+
+    // The correct form still works.
+    const updated = await repositories.encounters.updateById(encounter._id, {
+      $set: { 'queue.reassessCount': 1 },
+      $inc: { 'queue.priorityScore': 1 },
+    });
+    assert.equal(updated.queue.reassessCount, 1);
+    assert.equal(updated.queue.priorityScore, 3001);
+  });
 });

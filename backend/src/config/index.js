@@ -59,6 +59,17 @@ export const config = {
   },
 
   /**
+   * Demo-only time control (see routes/simulation.js). Enabled by default in
+   * development so the queue-decay demo is watchable; a production deployment
+   * sets ALLOW_SIMULATION=false or runs with NODE_ENV=production.
+   */
+  simulation: {
+    enabled: process.env.ALLOW_SIMULATION
+      ? process.env.ALLOW_SIMULATION === 'true'
+      : (process.env.NODE_ENV ?? 'development') !== 'production',
+  },
+
+  /**
    * Assumed regulatory jurisdiction. Drives audit event required fields, consent
    * artifact shape, and retention classes. See docs/compliance.md.
    */

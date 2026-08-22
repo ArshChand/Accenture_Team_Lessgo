@@ -179,23 +179,51 @@ export async function scoreAndPersist({
 
   const assessment = await repositories.assessments.create(assessmentDoc);
 
-  // The standing score only changes if a clinician has not overridden it. A human
-  // decision outranks a later machine re-score; the assistant may raise an alert,
-  // but it does not silently undo what a nurse chose.
-  const nurseOwned = encounter.assignedBy === 'nurse';
-  const wouldEscalate = fusion.finalESI < (encounter.currentESI ?? 6);
+  // The ratchet extends across time, not just across layers.
+  //
+  // fusion.js guarantees that within a single assessment the result is never less
+  // urgent than either the rules or the model concluded. That guarantee is
+  // worthless over the length of a wait if the *next* assessment can quietly undo
+  // it — and it can, because a re-score often runs on thinner evidence than the
+  // original (the vitals that justified an escalation are an hour old, the ML
+  // service may be down). Left unguarded, the system could walk a patient from
+  // ESI 1 down to ESI 3 with nobody deciding anything.
+  //
+  // So an automated re-score may only ever raise urgency. Lowering it is a
+  // clinical decision, and it goes through applyOverride, where it costs a reason
+  // code, a written justification and an attestation. The machine proposes, and
+  // the proposal is always visible as `aiRecommendedESI`; a human disposes.
+  const standingESI = encounter.currentESI;
+  const hasStandingScore = Number.isFinite(standingESI);
+  const escalates = !hasStandingScore || fusion.finalESI < standingESI;
 
   const updates = {
     latestAssessmentRef: assessment._id,
+    // Always recorded, even when not applied, so the dashboard can show a nurse
+    // "the assistant now thinks this is a 4" without acting on it unilaterally.
     aiRecommendedESI: fusion.finalESI,
   };
 
-  if (!nurseOwned || wouldEscalate) {
-    updates.currentESI = nurseOwned ? Math.min(encounter.currentESI, fusion.finalESI) : fusion.finalESI;
+  if (escalates) {
+    // An escalation supersedes a nurse's standing score as well as the AI's own.
+    // Catching deterioration in someone a clinician has already assessed is
+    // precisely what continuous re-triage is for, and the change is audited.
+    updates.currentESI = fusion.finalESI;
     updates.currentConfidence = confidence;
     updates.assignedAt = new Date();
-    if (!nurseOwned) updates.assignedBy = 'ai';
-    updates['queue.safeWaitMinutes'] = safeWaitMinutesWith(protocol, updates.currentESI);
+    updates.assignedBy = 'ai';
+    updates['queue.safeWaitMinutes'] = safeWaitMinutesWith(protocol, fusion.finalESI);
+  }
+
+  // The decay clock resets only when something genuinely new is now known about
+  // this patient — new vitals, or the initial assessment itself — never from the
+  // system re-running the same stale inputs against itself. A WAIT_DECAY trigger
+  // fires precisely because nobody has looked at this patient in a while; letting
+  // that automated re-score reset the clock would make a neglected patient read
+  // as freshly seen the instant the alert fires, hiding the exact problem this
+  // loop exists to surface.
+  if (trigger === TRIAGE_TRIGGER.VITALS_CHANGE || trigger === TRIAGE_TRIGGER.INITIAL) {
+    updates['queue.lastInformedAt'] = new Date();
   }
 
   const updated = await repositories.encounters.updateById(encounter._id, updates);
@@ -263,13 +291,17 @@ export async function applyOverride({
     consentRef: patient?.consentRef,
   });
 
+  const now = new Date();
   const updated = await repositories.encounters.updateById(encounter._id, {
     currentESI: newESI,
     assignedBy: 'nurse',
-    assignedAt: new Date(),
+    assignedAt: now,
     'queue.safeWaitMinutes': safeWaitMinutesWith(protocol, newESI),
-    // Reset the decay clock: a clinician has just looked at this patient.
-    'queue.lastReassessedAt': new Date(),
+    // A clinician has just looked at this patient — the clearest possible new
+    // information, so both clocks reset: the decay clock, and the throttle that
+    // stops the engine re-scoring them again immediately.
+    'queue.lastInformedAt': now,
+    'queue.lastReassessedAt': now,
   });
 
   return { encounter: updated, auditEvent, previousESI, newESI };

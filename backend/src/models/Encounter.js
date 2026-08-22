@@ -27,7 +27,14 @@ const QueueStateSchema = new Schema(
     /** First moment the safe wait was exceeded. Never cleared — it is evidence. */
     breachedAt: { type: Date },
     reassessmentDueAt: { type: Date },
+    /** Last time the engine ran any scoring pass, used only to throttle cadence. */
     lastReassessedAt: { type: Date },
+    /**
+     * Last time genuinely new information arrived — new vitals, or a clinician's
+     * decision. This, not `lastReassessedAt`, is what the decay clock is measured
+     * from: see src/queue/decay.js for why the distinction is safety-relevant.
+     */
+    lastInformedAt: { type: Date },
     reassessCount: { type: Number, default: 0 },
     /** Bonus applied for infants, the very old, and unaccompanied patients. */
     vulnerabilityBonus: { type: Number, default: 0 },
