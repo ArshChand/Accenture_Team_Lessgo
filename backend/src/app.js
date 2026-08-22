@@ -9,6 +9,7 @@ import {
   listBundledProtocols,
   loadBundledProtocol,
 } from './services/protocolService.js';
+import { triageRoutes } from './routes/triage.js';
 
 export function createApp() {
   const app = express();
@@ -75,6 +76,8 @@ export function createApp() {
 
     res.status(isConnected() ? 200 : 503).json(payload);
   });
+
+  app.use('/api', triageRoutes());
 
   app.use((req, res) => {
     res.status(404).json({ error: 'not_found', path: req.path });

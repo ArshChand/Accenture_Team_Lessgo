@@ -49,6 +49,13 @@ const VitalsObservationSchema = new Schema(
       /** Paediatric: alert, engaged, consolable — the "does the child look well" gestalt. */
       playfulAndConsolable: { type: Boolean },
       lethargic: { type: Boolean },
+      /**
+       * The two findings the START protocol needs and nothing else provides.
+       * Deliberately recorded even when a full set of vitals exists, because they
+       * are what keeps triage running when everything else is unavailable.
+       */
+      canWalk: { type: Boolean },
+      hasRadialPulse: { type: Boolean },
     },
 
     /** Derived at write time so re-triage comparisons are cheap and reproducible. */
