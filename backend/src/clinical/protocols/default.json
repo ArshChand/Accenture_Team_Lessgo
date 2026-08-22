@@ -1,0 +1,147 @@
+{
+  "siteId": "default",
+  "siteName": "Reference protocol (PALS/APLS + adult ED norms)",
+  "siteType": "reference",
+  "version": "1.0.0",
+  "description": "The baseline clinical protocol. Every site inherits from this and overrides only what differs, so a hospital never has to restate the parts it agrees with. Values are standard paediatric (PALS/APLS) and adult emergency reference ranges, calibrated for a prototype rather than validated for clinical use.",
+
+  "ageBands": [
+    { "band": "neonate", "minYears": 0, "maxYears": 0.0767 },
+    { "band": "infant", "minYears": 0.0767, "maxYears": 1 },
+    { "band": "toddler", "minYears": 1, "maxYears": 5 },
+    { "band": "child", "minYears": 5, "maxYears": 13 },
+    { "band": "adolescent", "minYears": 13, "maxYears": 18 },
+    { "band": "adult", "minYears": 18, "maxYears": 65 },
+    { "band": "geriatric", "minYears": 65, "maxYears": 80 },
+    { "band": "advanced_geriatric", "minYears": 80, "maxYears": null }
+  ],
+
+  "vitalThresholds": {
+    "neonate": {
+      "heartRate": { "criticalLow": 80, "low": 100, "high": 180, "criticalHigh": 200 },
+      "respiratoryRate": { "criticalLow": 20, "low": 30, "high": 60, "criticalHigh": 70 },
+      "systolicBP": { "criticalLow": 60, "low": 65 },
+      "spo2": { "critical": 88, "low": 94 },
+      "temperatureC": { "hypothermic": 36.5, "fever": 38.0, "highFever": 39.0 },
+      "capillaryRefillSec": { "high": 3 }
+    },
+    "infant": {
+      "heartRate": { "criticalLow": 80, "low": 100, "high": 160, "criticalHigh": 190 },
+      "respiratoryRate": { "criticalLow": 20, "low": 24, "high": 53, "criticalHigh": 65 },
+      "systolicBP": { "criticalLow": 70, "low": 75 },
+      "spo2": { "critical": 90, "low": 94 },
+      "temperatureC": { "hypothermic": 36.0, "fever": 38.0, "highFever": 39.5 },
+      "capillaryRefillSec": { "high": 3 }
+    },
+    "toddler": {
+      "heartRate": { "criticalLow": 70, "low": 90, "high": 150, "criticalHigh": 180 },
+      "respiratoryRate": { "criticalLow": 18, "low": 20, "high": 37, "criticalHigh": 50 },
+      "systolicBP": { "criticalLow": 72, "low": 80 },
+      "spo2": { "critical": 90, "low": 94 },
+      "temperatureC": { "hypothermic": 36.0, "fever": 38.0, "highFever": 39.5 },
+      "capillaryRefillSec": { "high": 3 }
+    },
+    "child": {
+      "heartRate": { "criticalLow": 60, "low": 70, "high": 120, "criticalHigh": 160 },
+      "respiratoryRate": { "criticalLow": 14, "low": 18, "high": 25, "criticalHigh": 35 },
+      "systolicBP": { "criticalLow": 80, "low": 90 },
+      "spo2": { "critical": 90, "low": 94 },
+      "temperatureC": { "hypothermic": 36.0, "fever": 38.0, "highFever": 40.0 },
+      "capillaryRefillSec": { "high": 3 }
+    },
+    "adolescent": {
+      "heartRate": { "criticalLow": 50, "low": 60, "high": 100, "criticalHigh": 140 },
+      "respiratoryRate": { "criticalLow": 10, "low": 12, "high": 20, "criticalHigh": 30 },
+      "systolicBP": { "criticalLow": 90, "low": 100 },
+      "spo2": { "critical": 90, "low": 94 },
+      "temperatureC": { "hypothermic": 36.0, "fever": 38.0, "highFever": 40.0 },
+      "capillaryRefillSec": { "high": 3 }
+    },
+    "adult": {
+      "heartRate": { "criticalLow": 40, "low": 60, "high": 100, "criticalHigh": 130 },
+      "respiratoryRate": { "criticalLow": 8, "low": 12, "high": 20, "criticalHigh": 30 },
+      "systolicBP": { "criticalLow": 90, "low": 100 },
+      "spo2": { "critical": 90, "low": 94 },
+      "temperatureC": { "hypothermic": 36.0, "fever": 38.0, "highFever": 40.0 },
+      "capillaryRefillSec": { "high": 3 }
+    },
+    "geriatric": {
+      "heartRate": { "criticalLow": 40, "low": 60, "high": 100, "criticalHigh": 120 },
+      "respiratoryRate": { "criticalLow": 8, "low": 12, "high": 20, "criticalHigh": 28 },
+      "systolicBP": { "criticalLow": 100, "low": 110 },
+      "spo2": { "critical": 90, "low": 92 },
+      "temperatureC": { "hypothermic": 36.0, "fever": 37.8, "highFever": 39.0 },
+      "capillaryRefillSec": { "high": 3 }
+    },
+    "advanced_geriatric": {
+      "heartRate": { "criticalLow": 40, "low": 60, "high": 100, "criticalHigh": 115 },
+      "respiratoryRate": { "criticalLow": 8, "low": 12, "high": 20, "criticalHigh": 26 },
+      "systolicBP": { "criticalLow": 100, "low": 110 },
+      "spo2": { "critical": 90, "low": 92 },
+      "temperatureC": { "hypothermic": 36.0, "fever": 37.8, "highFever": 39.0 },
+      "capillaryRefillSec": { "high": 3 }
+    }
+  },
+
+  "paediatricSystolicFormula": {
+    "enabled": true,
+    "intercept": 70,
+    "slopePerYear": 2,
+    "minAgeYears": 1,
+    "maxAgeYears": 10,
+    "aboveMaxAgeFloor": 90,
+    "belowMinAgeFloor": 70,
+    "lowOffset": 10,
+    "appliesToBands": ["toddler", "child"],
+    "note": "Standard APLS hypotension floor, 70 + (2 x age in years) for ages 1-10."
+  },
+
+  "safeWaitMinutes": {
+    "1": 0,
+    "2": 10,
+    "3": 30,
+    "4": 60,
+    "5": 120
+  },
+
+  "decay": {
+    "amberRatio": 0.6,
+    "reassessRatio": 0.8
+  },
+
+  "confidence": {
+    "weights": {
+      "completeness": 0.3,
+      "modelMargin": 0.35,
+      "inputReliability": 0.25,
+      "ageBandSupport": 0.1
+    },
+    "thresholds": {
+      "high": 0.75,
+      "moderate": 0.55
+    },
+    "surgeEscalationThreshold": 0.62,
+    "escalationFloorESI": 2
+  },
+
+  "modelSupportByBand": {
+    "neonate": 0.45,
+    "infant": 0.6,
+    "toddler": 0.72,
+    "child": 0.8,
+    "adolescent": 0.82,
+    "adult": 0.95,
+    "geriatric": 0.85,
+    "advanced_geriatric": 0.7
+  },
+
+  "ruleOverrides": [],
+
+  "surge": {
+    "baselineArrivalsPerHour": 8,
+    "surgeMultiplier": 2,
+    "queuePerNurseThreshold": 6,
+    "esi3SubBandingEnabled": true,
+    "lowAcuityReassessIntervalMs": 600000
+  }
+}

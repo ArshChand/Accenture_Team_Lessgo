@@ -1,0 +1,62 @@
+{
+  "siteId": "paediatric-tertiary",
+  "siteName": "Tertiary Paediatric Hospital (illustrative)",
+  "siteType": "specialty_paediatric",
+  "version": "1.0.0",
+  "description": "A high-volume children's hospital with paediatric intensivists on site. Almost the mirror image of the rural centre: deep paediatric expertise and data, thin adult coverage, and enough staff that ESI 3 can be seen faster than the reference protocol assumes. Demonstrates that the same assistant serves a specialty mix by changing data, not code.",
+
+  "safeWaitMinutes": {
+    "1": 0,
+    "2": 10,
+    "3": 20,
+    "4": 45,
+    "5": 90
+  },
+
+  "modelSupportByBand": {
+    "neonate": 0.82,
+    "infant": 0.93,
+    "toddler": 0.95,
+    "child": 0.95,
+    "adolescent": 0.9,
+    "adult": 0.5,
+    "geriatric": 0.3,
+    "advanced_geriatric": 0.25
+  },
+
+  "confidence": {
+    "thresholds": {
+      "high": 0.75,
+      "moderate": 0.55
+    },
+    "surgeEscalationThreshold": 0.6
+  },
+
+  "surge": {
+    "baselineArrivalsPerHour": 14,
+    "surgeMultiplier": 2,
+    "queuePerNurseThreshold": 8,
+    "esi3SubBandingEnabled": true,
+    "lowAcuityReassessIntervalMs": 480000
+  },
+
+  "vitalThresholds": {
+    "adult": {
+      "spo2": { "critical": 92, "low": 95 },
+      "temperatureC": { "hypothermic": 36.0, "fever": 38.0, "highFever": 39.5 }
+    }
+  },
+
+  "ruleOverrides": [
+    {
+      "code": "FEVER_PRESENT",
+      "impliedESI": 3,
+      "note": "Retained at urgent. A paediatric centre sees a very high volume of febrile children; escalating all of them would swamp the department and is the over-triage failure mode."
+    },
+    {
+      "code": "ATYPICAL_CARDIAC_PRESENTATION",
+      "enabled": false,
+      "note": "Adult ischaemic presentations are out of scope for this site; adults arriving here are stabilised and transferred under a separate pathway."
+    }
+  ]
+}

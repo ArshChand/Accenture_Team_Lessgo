@@ -1,0 +1,321 @@
+{
+  "modelId": "triagehandler-esi-xgb",
+  "version": "1.0.0",
+  "algorithm": "xgboost.XGBClassifier",
+  "trainedAt": "2026-08-22T02:12:59Z",
+  "trainingDataHash": "26f5e1d0d4f14cb1c0626707a414558535e3b6601bdd989b9b75a48f1e48f368",
+  "trainingRowCount": 9600,
+  "testRowCount": 2400,
+  "protocolPinned": {
+    "siteId": "default",
+    "version": "1.0.0"
+  },
+  "decisionRule": {
+    "name": "escalation_aware_cumulative_probability",
+    "tau": 0.3,
+    "description": "Predicted ESI is the most urgent level whose cumulative probability reaches tau, rather than the most likely level. Model uncertainty becomes caution."
+  },
+  "asymmetricCostMatrix": {
+    "urgencyWeights": {
+      "1": 6.0,
+      "2": 3.5,
+      "3": 1.4,
+      "4": 1.0,
+      "5": 1.0
+    }
+  },
+  "metrics": {
+    "accuracy": 0.5695833333333333,
+    "underTriageRate": 0.075,
+    "overTriageRate": 0.35541666666666666,
+    "criticalUnderTriageRate": 0.15915915915915915,
+    "meanAbsoluteError": 0.46541666666666665,
+    "exactOrEscalated": 0.925,
+    "criticalSentToLowAcuity": 3
+  },
+  "metricsArgmaxBaseline": {
+    "accuracy": 0.6554166666666666,
+    "underTriageRate": 0.155,
+    "overTriageRate": 0.18958333333333333,
+    "criticalUnderTriageRate": 0.24774774774774774,
+    "meanAbsoluteError": 0.37166666666666665,
+    "exactOrEscalated": 0.845,
+    "criticalSentToLowAcuity": 12
+  },
+  "escalationThresholdSweep": [
+    {
+      "tau": 0.2,
+      "underTriageRate": 0.0442,
+      "criticalUnderTriageRate": 0.1126,
+      "overTriageRate": 0.4646,
+      "accuracy": 0.4913
+    },
+    {
+      "tau": 0.25,
+      "underTriageRate": 0.0579,
+      "criticalUnderTriageRate": 0.1336,
+      "overTriageRate": 0.405,
+      "accuracy": 0.5371
+    },
+    {
+      "tau": 0.3,
+      "underTriageRate": 0.075,
+      "criticalUnderTriageRate": 0.1592,
+      "overTriageRate": 0.3554,
+      "accuracy": 0.5696
+    },
+    {
+      "tau": 0.35,
+      "underTriageRate": 0.0892,
+      "criticalUnderTriageRate": 0.1727,
+      "overTriageRate": 0.3204,
+      "accuracy": 0.5904
+    },
+    {
+      "tau": 0.4,
+      "underTriageRate": 0.1008,
+      "criticalUnderTriageRate": 0.1847,
+      "overTriageRate": 0.2833,
+      "accuracy": 0.6158
+    },
+    {
+      "tau": 0.5,
+      "underTriageRate": 0.1417,
+      "criticalUnderTriageRate": 0.2387,
+      "overTriageRate": 0.2146,
+      "accuracy": 0.6438
+    }
+  ],
+  "perBandMetrics": [
+    {
+      "band": "adolescent",
+      "support": 161,
+      "accuracy": 0.5403726708074534,
+      "underTriageRate": 0.11801242236024845,
+      "overTriageRate": 0.3416149068322981
+    },
+    {
+      "band": "adult",
+      "support": 967,
+      "accuracy": 0.5770423991726991,
+      "underTriageRate": 0.07445708376421924,
+      "overTriageRate": 0.3485005170630817
+    },
+    {
+      "band": "advanced_geriatric",
+      "support": 282,
+      "accuracy": 0.5,
+      "underTriageRate": 0.06382978723404255,
+      "overTriageRate": 0.43617021276595747
+    },
+    {
+      "band": "child",
+      "support": 190,
+      "accuracy": 0.5842105263157895,
+      "underTriageRate": 0.06842105263157895,
+      "overTriageRate": 0.3473684210526316
+    },
+    {
+      "band": "geriatric",
+      "support": 421,
+      "accuracy": 0.5605700712589073,
+      "underTriageRate": 0.0688836104513064,
+      "overTriageRate": 0.37054631828978624
+    },
+    {
+      "band": "infant",
+      "support": 140,
+      "accuracy": 0.6285714285714286,
+      "underTriageRate": 0.06428571428571428,
+      "overTriageRate": 0.30714285714285716
+    },
+    {
+      "band": "neonate",
+      "support": 33,
+      "accuracy": 0.6363636363636364,
+      "underTriageRate": 0.06060606060606061,
+      "overTriageRate": 0.30303030303030304
+    },
+    {
+      "band": "toddler",
+      "support": 206,
+      "accuracy": 0.6067961165048543,
+      "underTriageRate": 0.08737864077669903,
+      "overTriageRate": 0.3058252427184466
+    }
+  ],
+  "underTriageByArchetype": {
+    "acute_coronary_syndrome": 0.0536,
+    "allergic_reaction": 0.0588,
+    "gastrointestinal": 0.0648,
+    "geriatric_nonspecific": 0.1095,
+    "headache_neuro": 0.0737,
+    "major_trauma": 0.0213,
+    "minor_trauma": 0.0679,
+    "musculoskeletal": 0.0615,
+    "obstetric": 0.0789,
+    "overdose_self_harm": 0.1733,
+    "paediatric_febrile": 0.0737,
+    "respiratory_distress": 0.0489,
+    "sepsis": 0.0804,
+    "stroke": 0.1892,
+    "syncope": 0.12,
+    "upper_respiratory_minor": 0.0722
+  },
+  "topFeatureImportances": [
+    {
+      "feature": "hr_deviation",
+      "gain": 0.03839
+    },
+    {
+      "feature": "symptom_speech_difficulty",
+      "gain": 0.03051
+    },
+    {
+      "feature": "symptom_sore_throat",
+      "gain": 0.02977
+    },
+    {
+      "feature": "pain_score",
+      "gain": 0.02765
+    },
+    {
+      "feature": "symptom_abdominal_pain",
+      "gain": 0.02668
+    },
+    {
+      "feature": "symptom_unilateral_weakness",
+      "gain": 0.02634
+    },
+    {
+      "feature": "capillary_refill_sec",
+      "gain": 0.02434
+    },
+    {
+      "feature": "symptom_dyspnoea",
+      "gain": 0.02385
+    },
+    {
+      "feature": "symptom_laceration",
+      "gain": 0.02281
+    },
+    {
+      "feature": "symptom_joint_pain",
+      "gain": 0.02122
+    },
+    {
+      "feature": "condition_hypertension",
+      "gain": 0.02061
+    },
+    {
+      "feature": "symptom_facial_droop",
+      "gain": 0.02024
+    },
+    {
+      "feature": "temp_deviation",
+      "gain": 0.01895
+    },
+    {
+      "feature": "cue_diaphoresis",
+      "gain": 0.01873
+    },
+    {
+      "feature": "cue_pallor",
+      "gain": 0.01799
+    },
+    {
+      "feature": "rr_deviation",
+      "gain": 0.01794
+    },
+    {
+      "feature": "symptom_back_pain",
+      "gain": 0.01783
+    },
+    {
+      "feature": "cue_lethargic",
+      "gain": 0.01606
+    },
+    {
+      "feature": "symptom_diarrhoea",
+      "gain": 0.0154
+    },
+    {
+      "feature": "symptom_confusion",
+      "gain": 0.01539
+    },
+    {
+      "feature": "spo2_deviation",
+      "gain": 0.01517
+    },
+    {
+      "feature": "cue_guarding",
+      "gain": 0.01511
+    },
+    {
+      "feature": "symptom_syncope",
+      "gain": 0.01478
+    },
+    {
+      "feature": "symptom_count",
+      "gain": 0.0143
+    },
+    {
+      "feature": "condition_coronary_artery_disease",
+      "gain": 0.01336
+    }
+  ],
+  "trainingDataSummary": {
+    "rows": 12000,
+    "esiDistribution": {
+      "1": 663,
+      "2": 2666,
+      "3": 3801,
+      "4": 3372,
+      "5": 1498
+    },
+    "ageBandDistribution": {
+      "adolescent": 845,
+      "adult": 4782,
+      "advanced_geriatric": 1414,
+      "child": 963,
+      "geriatric": 2081,
+      "infant": 655,
+      "neonate": 144,
+      "toddler": 1116
+    },
+    "archetypeDistribution": {
+      "acute_coronary_syndrome": 566,
+      "allergic_reaction": 466,
+      "gastrointestinal": 1385,
+      "geriatric_nonspecific": 659,
+      "headache_neuro": 862,
+      "major_trauma": 230,
+      "minor_trauma": 1410,
+      "musculoskeletal": 1235,
+      "obstetric": 348,
+      "overdose_self_harm": 369,
+      "paediatric_febrile": 914,
+      "respiratory_distress": 969,
+      "sepsis": 480,
+      "stroke": 198,
+      "syncope": 485,
+      "upper_respiratory_minor": 1424
+    },
+    "priorRecordRate": 0.501,
+    "atypicalRate": 0.023,
+    "underReportedPainRate": 0.179,
+    "completeness": {
+      "minimal": 1815,
+      "full": 6915,
+      "partial": 3270
+    }
+  },
+  "archetypeCount": 16,
+  "limitations": [
+    "Trained on synthetic encounters generated from clinical archetypes, not on real patient data. Absolute metrics describe the simulation, not a real department.",
+    "Normalised against the reference site protocol; a site with substantially different thresholds should retrain rather than assume calibration transfers.",
+    "Neonatal and infant coverage is thin relative to adults, which is declared per band and lowers confidence for those patients rather than being hidden.",
+    "The model never sees a patient's trajectory, only a snapshot. Deterioration over time is handled by the re-triage loop, not by this model."
+  ],
+  "trainingDurationSeconds": 4.71
+}

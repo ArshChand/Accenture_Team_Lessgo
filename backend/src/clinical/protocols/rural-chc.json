@@ -1,0 +1,55 @@
+{
+  "siteId": "rural-chc",
+  "siteName": "Rural Community Health Centre (illustrative)",
+  "siteType": "rural_chc",
+  "version": "1.0.0",
+  "description": "A single-clinician rural centre roughly 90 minutes by road from the nearest tertiary hospital. Overrides only what genuinely differs from the reference protocol — everything else is inherited. Two things drive the changes: absolute volumes are far lower, so surge begins at a much smaller number; and there is no specialist on site to sanity-check an ambiguous case, so the assistant escalates on less uncertainty rather than more.",
+
+  "safeWaitMinutes": {
+    "1": 0,
+    "2": 10,
+    "3": 45,
+    "4": 90,
+    "5": 180
+  },
+
+  "confidence": {
+    "surgeEscalationThreshold": 0.7,
+    "thresholds": {
+      "high": 0.8,
+      "moderate": 0.62
+    }
+  },
+
+  "modelSupportByBand": {
+    "neonate": 0.3,
+    "infant": 0.45,
+    "toddler": 0.55,
+    "child": 0.62,
+    "adolescent": 0.65,
+    "adult": 0.78,
+    "geriatric": 0.68,
+    "advanced_geriatric": 0.55
+  },
+
+  "surge": {
+    "baselineArrivalsPerHour": 3,
+    "surgeMultiplier": 2,
+    "queuePerNurseThreshold": 4,
+    "esi3SubBandingEnabled": true,
+    "lowAcuityReassessIntervalMs": 900000
+  },
+
+  "ruleOverrides": [
+    {
+      "code": "HYPOXIA",
+      "impliedESI": 2,
+      "note": "No non-invasive ventilation on site and a 90-minute transfer. Any hypoxia starts the transfer conversation immediately rather than being observed."
+    },
+    {
+      "code": "ABNORMAL_VITAL_SIGN",
+      "impliedESI": 2,
+      "note": "With one clinician and no monitoring bay, a patient with deranged observations cannot be safely left in a waiting area."
+    }
+  ]
+}
