@@ -16,12 +16,18 @@
     "seed": "npm run seed --workspace backend",
     "demo:surge": "npm run demo:surge --workspace backend",
     "demo:override": "npm run demo:override --workspace backend",
-    "test": "npm run test --workspace backend"
+    "demo:decay": "node backend/scripts/liveQueueCheck.mjs",
+    "evaluate": "cd ml-service && python3 -m app.export_eval_set 1500 && cd ../backend && node scripts/evaluateFusion.js",
+    "test": "npm run test --workspace backend",
+    "test:ml": "cd ml-service && python3 -m pytest tests/ -q"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.3"
   }
 }

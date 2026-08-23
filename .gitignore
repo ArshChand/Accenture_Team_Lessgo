@@ -6,3 +6,10 @@ __pycache__/
 .venv/
 *.pyc
 .DS_Store
+.pytest_cache/
+.venv/
+dist/
+
+# Regenerated deterministically from seed 90210 by app.export_eval_set; 1.4MB of
+# derived data with no reason to live in history.
+ml-service/models/eval_set.json

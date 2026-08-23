@@ -43,6 +43,16 @@ const CAP = {
   MODIFIER_FLOOR: ESI.EMERGENT,
 };
 
+/** Age phrased at the precision the paediatric rules actually turn on. */
+function describeInfantAge(ageYears) {
+  const days = ageYears * 365.25;
+  if (days < 28) return `${Math.max(0, Math.round(days))} days old`;
+  const weeks = Math.round(days / 7);
+  if (weeks < 14) return `${weeks} weeks old`;
+  const months = Math.round(ageYears * 12);
+  return `${months} month${months === 1 ? '' : 's'} old`;
+}
+
 const has = (set, symptom) => set.has(symptom);
 const hasAny = (set, list) => list.some((s) => set.has(s));
 const countTrue = (...values) => values.filter(Boolean).length;
@@ -91,11 +101,15 @@ export function buildRuleContext({ encounter, patient = {}, vitals = {}, protoco
     capRefill: valueOf(vitals.capillaryRefillSec),
     glucose: valueOf(vitals.bloodGlucose),
 
-    /** HR / systolic. Above 0.9 suggests occult shock behind a normal-looking BP. */
+    /**
+     * HR / systolic. Above the age-appropriate ceiling it suggests occult shock
+     * behind a blood pressure that still looks normal on its own.
+     */
     shockIndex:
       Number.isFinite(hr) && Number.isFinite(sbp) && sbp > 0
         ? Number((hr / sbp).toFixed(2))
         : undefined,
+    shockIndexCeiling: activeProtocol.shockIndexCeiling?.[band] ?? 0.9,
 
     cues: vitals.observedCues ?? {},
     hasAnyVitals: [
@@ -471,7 +485,10 @@ export const RULES = [
       if (!Number.isFinite(c.ageYears) || c.ageYears >= 0.25) return null;
       if (!Number.isFinite(c.temp) || c.temp < 38.0) return null;
       return {
-        evidence: `Temperature ${c.temp}°C at ${Math.round(c.ageYears * 12)} months`,
+        // Reported in weeks below three months: this rule turns on exactly how
+        // young the infant is, so rounding a six-week-old to "1 months" both
+        // reads wrong and hides the margin the nurse is checking.
+        evidence: `Temperature ${c.temp}°C at ${describeInfantAge(c.ageYears)}`,
         rationale:
           'Any fever under 3 months mandates a full septic screen regardless of how well the infant appears. Appearance is not a reliable discriminator at this age.',
       };
@@ -602,14 +619,20 @@ export const RULES = [
     label: 'Elevated shock index',
     impliedESI: ESI.EMERGENT,
     severity: 'warning',
-    evaluate: (c) =>
-      Number.isFinite(c.shockIndex) && c.shockIndex > 0.9
-        ? {
-            evidence: `Shock index ${c.shockIndex} (HR ${c.hr} / SBP ${c.sbp})`,
-            rationale:
-              'The ratio detects compensated shock while heart rate and blood pressure are each still individually within range.',
-          }
-        : null,
+    ageBandSpecific: true,
+    evaluate: (c) => {
+      if (!Number.isFinite(c.shockIndex)) return null;
+      // Age-adjusted, like every other threshold in this engine. A single adult
+      // ceiling of 0.9 would call every healthy child shocked: children run fast
+      // hearts against low pressures, so the ratio is high in health.
+      const ceiling = c.shockIndexCeiling;
+      if (!Number.isFinite(ceiling) || c.shockIndex <= ceiling) return null;
+      return {
+        evidence: `Shock index ${c.shockIndex} (HR ${c.hr} / SBP ${c.sbp}); ceiling ${ceiling} for ${c.band}`,
+        rationale:
+          'The ratio detects compensated shock while heart rate and blood pressure are each still individually within range.',
+      };
+    },
   },
   {
     code: 'BETA_BLOCKER_MASKED_SHOCK',

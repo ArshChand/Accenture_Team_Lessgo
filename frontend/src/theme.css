@@ -1,0 +1,127 @@
+/**
+ * Design tokens.
+ *
+ * Colour here is clinical signalling, not decoration, so it follows the status
+ * palette rules rather than a brand palette: four reserved status roles, never
+ * reused for anything else, and never carrying meaning on their own. Every ESI
+ * badge shows its number, every decay indicator shows its state in words, and
+ * every alert carries an icon glyph. A triage board that encodes urgency in hue
+ * alone is unreadable to a colourblind nurse — roughly one in twelve men — and
+ * that is a patient-safety defect, not an accessibility nicety.
+ *
+ * Dark mode is a selected set of steps against the dark surface, not an inverted
+ * light palette: an ED runs through the night and the night shift should not be
+ * staring at a white screen.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* surfaces & ink */
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-raised: #ffffff;
+  --ink: #0b0b0b;
+  --ink-secondary: #52514e;
+  --ink-muted: #898781;
+  --hairline: #e1e0d9;
+  --border: rgba(11, 11, 11, 0.1);
+  --shadow: 0 1px 2px rgba(11, 11, 11, 0.06), 0 4px 12px rgba(11, 11, 11, 0.04);
+
+  /* reserved status roles — never used for anything but state */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  /* tinted washes for row backgrounds; the badge carries the actual signal */
+  --wash-good: rgba(12, 163, 12, 0.07);
+  --wash-warning: rgba(250, 178, 25, 0.1);
+  --wash-serious: rgba(236, 131, 90, 0.11);
+  --wash-critical: rgba(208, 59, 59, 0.09);
+
+  --accent: #2a78d6;
+  --accent-wash: rgba(42, 120, 214, 0.09);
+
+  --radius: 8px;
+  --radius-sm: 5px;
+  --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-raised: #232322;
+    --ink: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --hairline: #2c2c2a;
+    --border: rgba(255, 255, 255, 0.1);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+
+    --wash-good: rgba(12, 163, 12, 0.16);
+    --wash-warning: rgba(250, 178, 25, 0.16);
+    --wash-serious: rgba(236, 131, 90, 0.16);
+    --wash-critical: rgba(208, 59, 59, 0.18);
+
+    --accent: #3987e5;
+    --accent-wash: rgba(57, 135, 229, 0.16);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-raised: #232322;
+  --ink: #ffffff;
+  --ink-secondary: #c3c2b7;
+  --ink-muted: #898781;
+  --hairline: #2c2c2a;
+  --border: rgba(255, 255, 255, 0.1);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  --wash-good: rgba(12, 163, 12, 0.16);
+  --wash-warning: rgba(250, 178, 25, 0.16);
+  --wash-serious: rgba(236, 131, 90, 0.16);
+  --wash-critical: rgba(208, 59, 59, 0.18);
+
+  --accent: #3987e5;
+  --accent-wash: rgba(57, 135, 229, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--page);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+/* Anything conveying state gets tabular figures so columns line up as they change. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

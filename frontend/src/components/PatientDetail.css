@@ -1,0 +1,186 @@
+.detail {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+}
+
+.detail--loading,
+.detail--error {
+  color: var(--ink-muted);
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.detail--error {
+  color: var(--status-critical);
+}
+
+.detail__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detail__ref {
+  margin: 0;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail__meta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* Capitalise the band name only — see QueueBoard.css. */
+.detail__band {
+  text-transform: capitalize;
+}
+
+.detail__complaint {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.detail__row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.detail__degraded {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--status-warning);
+  background: var(--wash-warning);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.detail__section {
+  border-top: 1px solid var(--hairline);
+  padding-top: 12px;
+}
+
+.detail__section h3 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+}
+
+.detail__muted {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.detail__identity {
+  font-size: 13px;
+}
+
+.detail__quote {
+  margin: 0 0 6px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--accent);
+  background: var(--page);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.detail__lang {
+  display: inline-block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+  margin-right: 6px;
+}
+
+.detail__extracted {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.detail__unmapped {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--status-warning);
+}
+
+.detail__drivers {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.detail__drivers ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.detail__vitals {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.detail__vitals th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--ink-secondary);
+  padding: 3px 0;
+}
+
+.detail__vitals td {
+  padding: 3px 0 3px 10px;
+}
+
+.detail__missing {
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.detail__history {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail__ratchet {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--wash-warning);
+  border: 1px solid var(--status-warning);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.detail__override {
+  margin-top: 4px;
+}
+
+.btn--small {
+  padding: 5px 10px;
+  font-size: 12px;
+}

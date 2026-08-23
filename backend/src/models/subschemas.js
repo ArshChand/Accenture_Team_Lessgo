@@ -74,6 +74,23 @@ export const ExplainFlagSchema = new Schema(
     evidence: { type: String },
     /** True when this flag exists only because of the patient's age band. */
     ageBandSpecific: { type: Boolean, default: false },
+    /**
+     * Which layer produced this flag. A nurse reads a named clinical rule
+     * differently from a statistical contribution, and the dashboard needs to be
+     * able to say which is which — so provenance is persisted rather than
+     * recomputed, and the stored assessment stays self-describing.
+     */
+    source: {
+      type: String,
+      enum: ['rule', 'model', 'confidence', 'fusion'],
+      default: 'rule',
+    },
+    /** For rule-sourced flags: the floor this rule imposed. */
+    impliedESI: { type: Number },
+    /** The clinical reasoning, in the words a reviewer would want to read. */
+    rationale: { type: String },
+    /** True when this flag locks the model out of downgrading the assessment. */
+    hardRedFlag: { type: Boolean, default: false },
   },
   { _id: false },
 );

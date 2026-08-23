@@ -1,0 +1,370 @@
+{
+  "generatedAt": "2026-08-23T11:54:07.581Z",
+  "evaluationSet": {
+    "rows": 1500,
+    "source": "synthetic, held-out seed 90210"
+  },
+  "layers": {
+    "ruleEngineAlone": {
+      "n": 1500,
+      "accuracy": 0.382,
+      "underTriageRate": 0.4106666666666667,
+      "overTriageRate": 0.20733333333333334,
+      "criticalUnderTriageRate": 0.43031784841075793,
+      "criticalSentToLowAcuity": 26,
+      "meanAbsoluteError": 0.8226666666666667
+    },
+    "modelAloneMostLikely": {
+      "n": 1500,
+      "accuracy": 0.6293333333333333,
+      "underTriageRate": 0.16,
+      "overTriageRate": 0.21066666666666667,
+      "criticalUnderTriageRate": 0.2616136919315403,
+      "criticalSentToLowAcuity": 11,
+      "meanAbsoluteError": 0.4013333333333333
+    },
+    "modelAloneSelfEscalated": {
+      "n": 1500,
+      "accuracy": 0.5946666666666667,
+      "underTriageRate": 0.11133333333333334,
+      "overTriageRate": 0.294,
+      "criticalUnderTriageRate": 0.2078239608801956,
+      "criticalSentToLowAcuity": 7,
+      "meanAbsoluteError": 0.43866666666666665
+    },
+    "fusedShippedDefault": {
+      "n": 1500,
+      "accuracy": 0.5073333333333333,
+      "underTriageRate": 0.086,
+      "overTriageRate": 0.4066666666666667,
+      "criticalUnderTriageRate": 0.15158924205378974,
+      "criticalSentToLowAcuity": 6,
+      "meanAbsoluteError": 0.6333333333333333
+    },
+    "fusedWithoutModelEscalation": {
+      "n": 1500,
+      "accuracy": 0.524,
+      "underTriageRate": 0.11866666666666667,
+      "overTriageRate": 0.35733333333333334,
+      "criticalUnderTriageRate": 0.18337408312958436,
+      "criticalSentToLowAcuity": 7,
+      "meanAbsoluteError": 0.6066666666666667
+    }
+  },
+  "fusedByBand": {
+    "adolescent": {
+      "n": 92,
+      "accuracy": 0.5543478260869565,
+      "underTriageRate": 0.05434782608695652,
+      "overTriageRate": 0.391304347826087,
+      "criticalUnderTriageRate": 0.09523809523809523,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.5869565217391305
+    },
+    "geriatric": {
+      "n": 266,
+      "accuracy": 0.47368421052631576,
+      "underTriageRate": 0.06015037593984962,
+      "overTriageRate": 0.46616541353383456,
+      "criticalUnderTriageRate": 0.08139534883720931,
+      "criticalSentToLowAcuity": 1,
+      "meanAbsoluteError": 0.6729323308270677
+    },
+    "adult": {
+      "n": 565,
+      "accuracy": 0.5256637168141592,
+      "underTriageRate": 0.10088495575221239,
+      "overTriageRate": 0.3734513274336283,
+      "criticalUnderTriageRate": 0.1830065359477124,
+      "criticalSentToLowAcuity": 4,
+      "meanAbsoluteError": 0.5805309734513274
+    },
+    "child": {
+      "n": 144,
+      "accuracy": 0.5486111111111112,
+      "underTriageRate": 0.09722222222222222,
+      "overTriageRate": 0.3541666666666667,
+      "criticalUnderTriageRate": 0.16666666666666666,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.5625
+    },
+    "toddler": {
+      "n": 137,
+      "accuracy": 0.5182481751824818,
+      "underTriageRate": 0.058394160583941604,
+      "overTriageRate": 0.4233576642335766,
+      "criticalUnderTriageRate": 0.09090909090909091,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.635036496350365
+    },
+    "advanced_geriatric": {
+      "n": 197,
+      "accuracy": 0.4416243654822335,
+      "underTriageRate": 0.1065989847715736,
+      "overTriageRate": 0.4517766497461929,
+      "criticalUnderTriageRate": 0.16901408450704225,
+      "criticalSentToLowAcuity": 1,
+      "meanAbsoluteError": 0.7461928934010152
+    },
+    "infant": {
+      "n": 84,
+      "accuracy": 0.5714285714285714,
+      "underTriageRate": 0.09523809523809523,
+      "overTriageRate": 0.3333333333333333,
+      "criticalUnderTriageRate": 0.25,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.5595238095238095
+    },
+    "neonate": {
+      "n": 15,
+      "accuracy": 0.13333333333333333,
+      "underTriageRate": 0,
+      "overTriageRate": 0.8666666666666667,
+      "criticalUnderTriageRate": 0,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 1.8
+    }
+  },
+  "fusedByArchetype": {
+    "paediatric_febrile": {
+      "n": 121,
+      "accuracy": 0.5371900826446281,
+      "underTriageRate": 0.03305785123966942,
+      "overTriageRate": 0.4297520661157025,
+      "criticalUnderTriageRate": 0.125,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.5206611570247934
+    },
+    "acute_coronary_syndrome": {
+      "n": 73,
+      "accuracy": 0.7123287671232876,
+      "underTriageRate": 0.0547945205479452,
+      "overTriageRate": 0.2328767123287671,
+      "criticalUnderTriageRate": 0.06451612903225806,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.2876712328767123
+    },
+    "sepsis": {
+      "n": 49,
+      "accuracy": 0.673469387755102,
+      "underTriageRate": 0.08163265306122448,
+      "overTriageRate": 0.24489795918367346,
+      "criticalUnderTriageRate": 0.07894736842105263,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.32653061224489793
+    },
+    "overdose_self_harm": {
+      "n": 39,
+      "accuracy": 0.4358974358974359,
+      "underTriageRate": 0.15384615384615385,
+      "overTriageRate": 0.41025641025641024,
+      "criticalUnderTriageRate": 0.22727272727272727,
+      "criticalSentToLowAcuity": 1,
+      "meanAbsoluteError": 0.717948717948718
+    },
+    "musculoskeletal": {
+      "n": 159,
+      "accuracy": 0.5220125786163522,
+      "underTriageRate": 0.08176100628930817,
+      "overTriageRate": 0.39622641509433965,
+      "criticalUnderTriageRate": 0,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.6540880503144654
+    },
+    "geriatric_nonspecific": {
+      "n": 92,
+      "accuracy": 0.40217391304347827,
+      "underTriageRate": 0.05434782608695652,
+      "overTriageRate": 0.5434782608695652,
+      "criticalUnderTriageRate": 0.14285714285714285,
+      "criticalSentToLowAcuity": 1,
+      "meanAbsoluteError": 0.8043478260869565
+    },
+    "respiratory_distress": {
+      "n": 114,
+      "accuracy": 0.5175438596491229,
+      "underTriageRate": 0.043859649122807015,
+      "overTriageRate": 0.43859649122807015,
+      "criticalUnderTriageRate": 0.06779661016949153,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.5614035087719298
+    },
+    "minor_trauma": {
+      "n": 163,
+      "accuracy": 0.5398773006134969,
+      "underTriageRate": 0.11042944785276074,
+      "overTriageRate": 0.3496932515337423,
+      "criticalUnderTriageRate": 0.42857142857142855,
+      "criticalSentToLowAcuity": 2,
+      "meanAbsoluteError": 0.6319018404907976
+    },
+    "upper_respiratory_minor": {
+      "n": 176,
+      "accuracy": 0.4715909090909091,
+      "underTriageRate": 0.11931818181818182,
+      "overTriageRate": 0.4090909090909091,
+      "criticalUnderTriageRate": 0,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.8011363636363636
+    },
+    "allergic_reaction": {
+      "n": 60,
+      "accuracy": 0.2833333333333333,
+      "underTriageRate": 0.13333333333333333,
+      "overTriageRate": 0.5833333333333334,
+      "criticalUnderTriageRate": 0.28,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.9
+    },
+    "headache_neuro": {
+      "n": 109,
+      "accuracy": 0.5229357798165137,
+      "underTriageRate": 0.10091743119266056,
+      "overTriageRate": 0.3761467889908257,
+      "criticalUnderTriageRate": 0.25,
+      "criticalSentToLowAcuity": 1,
+      "meanAbsoluteError": 0.5779816513761468
+    },
+    "gastrointestinal": {
+      "n": 178,
+      "accuracy": 0.47752808988764045,
+      "underTriageRate": 0.056179775280898875,
+      "overTriageRate": 0.46629213483146065,
+      "criticalUnderTriageRate": 0.5714285714285714,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.7359550561797753
+    },
+    "major_trauma": {
+      "n": 25,
+      "accuracy": 0.72,
+      "underTriageRate": 0.04,
+      "overTriageRate": 0.24,
+      "criticalUnderTriageRate": 0.05263157894736842,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.28
+    },
+    "syncope": {
+      "n": 60,
+      "accuracy": 0.36666666666666664,
+      "underTriageRate": 0.13333333333333333,
+      "overTriageRate": 0.5,
+      "criticalUnderTriageRate": 0.22727272727272727,
+      "criticalSentToLowAcuity": 1,
+      "meanAbsoluteError": 0.7
+    },
+    "obstetric": {
+      "n": 52,
+      "accuracy": 0.5,
+      "underTriageRate": 0.1346153846153846,
+      "overTriageRate": 0.36538461538461536,
+      "criticalUnderTriageRate": 0.23809523809523808,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.5384615384615384
+    },
+    "stroke": {
+      "n": 30,
+      "accuracy": 0.6333333333333333,
+      "underTriageRate": 0.13333333333333333,
+      "overTriageRate": 0.23333333333333334,
+      "criticalUnderTriageRate": 0.14285714285714285,
+      "criticalSentToLowAcuity": 0,
+      "meanAbsoluteError": 0.36666666666666664
+    }
+  },
+  "ratchet": {
+    "firedCount": 120,
+    "underTriageWithout": 0.092
+  },
+  "escalationThresholdSweep": [
+    {
+      "tau": 0.2,
+      "n": 1500,
+      "accuracy": 0.42866666666666664,
+      "underTriageRate": 0.038,
+      "overTriageRate": 0.5333333333333333,
+      "criticalUnderTriageRate": 0.08801955990220049,
+      "criticalSentToLowAcuity": 2,
+      "meanAbsoluteError": 0.7446666666666667
+    },
+    {
+      "tau": 0.25,
+      "n": 1500,
+      "accuracy": 0.46266666666666667,
+      "underTriageRate": 0.046,
+      "overTriageRate": 0.49133333333333334,
+      "criticalUnderTriageRate": 0.09290953545232274,
+      "criticalSentToLowAcuity": 4,
+      "meanAbsoluteError": 0.6986666666666667
+    },
+    {
+      "tau": 0.3,
+      "n": 1500,
+      "accuracy": 0.4826666666666667,
+      "underTriageRate": 0.062,
+      "overTriageRate": 0.4553333333333333,
+      "criticalUnderTriageRate": 0.11491442542787286,
+      "criticalSentToLowAcuity": 5,
+      "meanAbsoluteError": 0.67
+    },
+    {
+      "tau": 0.35,
+      "n": 1500,
+      "accuracy": 0.498,
+      "underTriageRate": 0.07266666666666667,
+      "overTriageRate": 0.42933333333333334,
+      "criticalUnderTriageRate": 0.13202933985330073,
+      "criticalSentToLowAcuity": 6,
+      "meanAbsoluteError": 0.648
+    },
+    {
+      "tau": 0.4,
+      "n": 1500,
+      "accuracy": 0.5073333333333333,
+      "underTriageRate": 0.086,
+      "overTriageRate": 0.4066666666666667,
+      "criticalUnderTriageRate": 0.15158924205378974,
+      "criticalSentToLowAcuity": 6,
+      "meanAbsoluteError": 0.6333333333333333
+    },
+    {
+      "tau": 0.45,
+      "n": 1500,
+      "accuracy": 0.5213333333333333,
+      "underTriageRate": 0.096,
+      "overTriageRate": 0.38266666666666665,
+      "criticalUnderTriageRate": 0.16136919315403422,
+      "criticalSentToLowAcuity": 6,
+      "meanAbsoluteError": 0.6146666666666667
+    },
+    {
+      "tau": 0.5,
+      "n": 1500,
+      "accuracy": 0.5293333333333333,
+      "underTriageRate": 0.10666666666666667,
+      "overTriageRate": 0.364,
+      "criticalUnderTriageRate": 0.17603911980440098,
+      "criticalSentToLowAcuity": 6,
+      "meanAbsoluteError": 0.604
+    },
+    {
+      "tau": 0.6,
+      "n": 1500,
+      "accuracy": 0.524,
+      "underTriageRate": 0.118,
+      "overTriageRate": 0.358,
+      "criticalUnderTriageRate": 0.18337408312958436,
+      "criticalSentToLowAcuity": 7,
+      "meanAbsoluteError": 0.6066666666666667
+    },
+    {
+      "tau": 0.7,
+      "n": 1500,
+      "accuracy": 0.5246666666666666,
+      "underTriageRate": 0.118,
+      "overTriageRate": 0.35733333333333334,
+      "criticalUnderTriageRate": 0.18337408312958436,
+      "criticalSentToLowAcuity": 7,
+      "meanAbsoluteError": 0.606
+    }
+  ]
+}

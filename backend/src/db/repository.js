@@ -63,10 +63,24 @@ function getPath(target, path) {
  * and always produces operator form. Plain patches are treated as `$set`, which
  * means dotted keys do a targeted field update rather than replacing a whole
  * sub-document — the behaviour callers expect from Mongo.
+ *
+ * A document that mixes a plain field with an operator (`{ foo: 1, $inc: {...} }`)
+ * is rejected rather than partially applied. Real MongoDB refuses this shape
+ * outright ("Unknown modifier") rather than silently dropping the plain field —
+ * matching that here means a mistake at the call site is a loud error during
+ * development, not a decay field that quietly stops updating in production.
  */
 export function normalizeUpdate(update) {
-  const hasOperators = Object.keys(update).some((key) => key.startsWith('$'));
-  if (hasOperators) return update;
+  const keys = Object.keys(update);
+  const operatorKeys = keys.filter((key) => key.startsWith('$'));
+
+  if (operatorKeys.length > 0 && operatorKeys.length !== keys.length) {
+    throw new Error(
+      `Cannot mix a plain field with an update operator in one call: ${keys.join(', ')}. ` +
+        `Use { $set: { ... }, ${operatorKeys.join(', ')}: {...} } instead.`,
+    );
+  }
+  if (operatorKeys.length > 0) return update;
   return { $set: update };
 }
 

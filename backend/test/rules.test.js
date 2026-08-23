@@ -160,6 +160,58 @@ describe('paediatric safety rules', () => {
   });
 });
 
+describe('shock index is age-adjusted, not an adult constant', () => {
+  it('does not call a well toddler shocked for running a normal fast heart', () => {
+    // HR 120 / SBP 96 = 1.25. Against the adult ceiling of 0.9 this reads as
+    // shock; for a three-year-old it is simply normal physiology.
+    const result = evaluateRules(
+      ctx({
+        ageYears: 3,
+        vitals: {
+          heartRate: measured(120),
+          systolicBP: measured(96),
+          respiratoryRate: measured(28),
+          temperatureC: measured(37.0),
+          capillaryRefillSec: measured(2),
+        },
+      }),
+    );
+    assert.ok(
+      !codes(result).includes('ELEVATED_SHOCK_INDEX'),
+      'a healthy toddler must not be flagged as shocked by an adult threshold',
+    );
+  });
+
+  it('still catches a genuinely shocked toddler', () => {
+    const result = evaluateRules(
+      ctx({ ageYears: 3, vitals: { heartRate: measured(170), systolicBP: measured(78) } }),
+    );
+    assert.ok(codes(result).includes('ELEVATED_SHOCK_INDEX'));
+  });
+
+  it('keeps the adult ceiling for adults', () => {
+    const wellAdult = evaluateRules(
+      ctx({ ageYears: 40, vitals: { heartRate: measured(74), systolicBP: measured(124) } }),
+    );
+    const compensating = evaluateRules(
+      ctx({ ageYears: 40, vitals: { heartRate: measured(118), systolicBP: measured(120) } }),
+    );
+
+    assert.ok(!codes(wellAdult).includes('ELEVATED_SHOCK_INDEX'));
+    assert.ok(
+      codes(compensating).includes('ELEVATED_SHOCK_INDEX'),
+      'an adult at 0.98 is still detected — the fix must not blunt the adult case',
+    );
+  });
+
+  it('scales the ceiling monotonically with age', () => {
+    // The same ratio that is normal in an infant is alarming in an adolescent.
+    const ratio = { heartRate: measured(140), systolicBP: measured(100) }; // 1.4
+    assert.ok(!codes(evaluateRules(ctx({ ageYears: 0.5, vitals: ratio }))).includes('ELEVATED_SHOCK_INDEX'));
+    assert.ok(codes(evaluateRules(ctx({ ageYears: 15, vitals: ratio }))).includes('ELEVATED_SHOCK_INDEX'));
+  });
+});
+
 describe('geriatric safety rules', () => {
   it('treats hypothermia as a sepsis flag rather than as reassurance', () => {
     const result = evaluateRules(
