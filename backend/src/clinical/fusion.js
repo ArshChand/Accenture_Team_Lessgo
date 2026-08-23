@@ -39,10 +39,35 @@ export function fuse({
   surgeActive = false,
 }) {
   const ruleFloor = ruleResult?.esi ?? ESI.NON_URGENT;
+
+  /**
+   * Which of the model's two answers to fuse on.
+   *
+   * The ML service returns both its most likely class and an escalation-aware
+   * choice that steps up when the cumulative probability of something worse
+   * reaches a threshold. That escalation rule exists for the model used *alone*.
+   *
+   * Inside the hybrid it double-counts: this layer already escalates twice over,
+   * once by flooring at whatever the rules concluded and again through the
+   * uncertainty ratchet below — and the ratchet reasons from a richer signal than
+   * the model's own class probabilities, since it also sees what was never
+   * measured and how much the evidence can be trusted. Stacking a third
+   * escalation on top does not make anyone safer; it compresses the whole board
+   * onto ESI 2 and destroys the queue's ability to say who is next, which is its
+   * entire job.
+   *
+   * So the hybrid consumes the point estimate and owns escalation itself. Sites
+   * that run the model without the rule engine can set `useModelEscalation`.
+   */
+  const useModelEscalation = protocol.confidence?.useModelEscalation === true;
+  const modelPoint = useModelEscalation
+    ? modelResult?.esi
+    : (modelResult?.mostLikelyESI ?? modelResult?.esi);
+
   // A missing model imposes no constraint. It must never be read as a vote for
   // ESI 5 — silence from a service is not a clinical opinion.
-  const modelESI = Number.isFinite(modelResult?.esi) ? modelResult.esi : ESI.NON_URGENT;
-  const modelAvailable = Number.isFinite(modelResult?.esi);
+  const modelAvailable = Number.isFinite(modelPoint);
+  const modelESI = modelAvailable ? modelPoint : ESI.NON_URGENT;
 
   // --- 1. the more urgent of the two layers ---
   let finalESI = moreUrgent(ruleFloor, modelESI);

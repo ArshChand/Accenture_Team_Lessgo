@@ -208,6 +208,76 @@ describe('fusion: uncertainty escalates', () => {
   });
 });
 
+describe('fusion consumes the model point estimate, not its pre-escalated answer', () => {
+  /** The shape the ML service actually returns: both answers, plus probabilities. */
+  const mlResponse = (escalated, mostLikely) => ({
+    esi: escalated,
+    mostLikelyESI: mostLikely,
+    classProbabilities: [0.05, 0.25, 0.3, 0.3, 0.1],
+    topContributions: [],
+  });
+
+  it('ignores the model’s own escalation by default, so escalation is not applied three times', () => {
+    // The model most likely says 3 but escalated itself to 2. The rules impose no
+    // floor. Fusing on the escalated answer would hand back 2 having already
+    // escalated once inside the model, once here if the rules had fired, and
+    // again if confidence were low — compressing the board.
+    const result = fuse({
+      ruleResult: rules(ESI.NON_URGENT),
+      modelResult: mlResponse(ESI.EMERGENT, ESI.URGENT),
+      confidence: confident,
+      protocol,
+    });
+    assert.equal(result.finalESI, ESI.URGENT);
+    assert.equal(result.modelESI, ESI.URGENT);
+  });
+
+  it('honours the model’s escalation when a site opts in', () => {
+    const modelLed = loadProtocol({ confidence: { useModelEscalation: true } });
+    const result = fuse({
+      ruleResult: rules(ESI.NON_URGENT),
+      modelResult: mlResponse(ESI.EMERGENT, ESI.URGENT),
+      confidence: confident,
+      protocol: modelLed,
+    });
+    assert.equal(result.finalESI, ESI.EMERGENT);
+  });
+
+  it('still escalates through the ratchet when confidence is low', () => {
+    // Dropping the model's internal escalation must not cost the safety net that
+    // this layer owns.
+    const result = fuse({
+      ruleResult: rules(ESI.NON_URGENT),
+      modelResult: mlResponse(ESI.EMERGENT, ESI.URGENT),
+      confidence: unsure,
+      protocol,
+    });
+    assert.equal(result.finalESI, ESI.EMERGENT);
+    assert.equal(result.ratchetApplied, true);
+  });
+
+  it('still floors at a hard red flag regardless of which model answer is used', () => {
+    const result = fuse({
+      ruleResult: rules(ESI.EMERGENT, { hardRedFlag: true, firedRules: [{ code: 'X', hardRedFlag: true }] }),
+      modelResult: mlResponse(ESI.LESS_URGENT, ESI.NON_URGENT),
+      confidence: confident,
+      protocol,
+    });
+    assert.equal(result.finalESI, ESI.EMERGENT);
+    assert.equal(result.redFlagLocked, true);
+  });
+
+  it('falls back to the escalated answer if a model omits the point estimate', () => {
+    const result = fuse({
+      ruleResult: rules(ESI.NON_URGENT),
+      modelResult: { esi: ESI.URGENT, classProbabilities: [], topContributions: [] },
+      confidence: confident,
+      protocol,
+    });
+    assert.equal(result.finalESI, ESI.URGENT);
+  });
+});
+
 describe('fusion: a missing model is not a vote for low acuity', () => {
   it('falls back to the rule floor when the model is unavailable', () => {
     const result = fuse({

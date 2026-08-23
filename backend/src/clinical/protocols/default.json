@@ -83,6 +83,19 @@
     }
   },
 
+  "shockIndexCeiling": {
+    "neonate": 2.0,
+    "infant": 1.6,
+    "toddler": 1.4,
+    "child": 1.2,
+    "adolescent": 1.0,
+    "adult": 0.9,
+    "geriatric": 0.9,
+    "advanced_geriatric": 0.9,
+    "_note": "Shock index is heart rate over systolic pressure, so it is naturally high in children, who run fast hearts and low pressures. A single adult ceiling of 0.9 calls every healthy toddler shocked. These follow the age-adjusted paediatric shock index (SIPA) convention.",
+    "_examples": "A well 3-year-old at HR 120 / SBP 96 scores 1.25 — normal here, alarming against an adult ceiling. A shocked 3-year-old at HR 165 / SBP 80 scores 2.06 and still fires."
+  },
+
   "paediatricSystolicFormula": {
     "enabled": true,
     "intercept": 70,
@@ -121,7 +134,9 @@
       "moderate": 0.55
     },
     "surgeEscalationThreshold": 0.62,
-    "escalationFloorESI": 2
+    "escalationFloorESI": 2,
+    "useModelEscalation": false,
+    "_useModelEscalationNote": "The risk model can apply its own escalation-aware decision rule, which is right when it runs alone. In the hybrid this layer already escalates via the rule floor and the uncertainty ratchet, so consuming the model's pre-escalated answer would escalate three times over and compress the board onto ESI 2. Leave false unless running the model without the rule engine."
   },
 
   "modelSupportByBand": {
