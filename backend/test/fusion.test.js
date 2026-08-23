@@ -208,7 +208,7 @@ describe('fusion: uncertainty escalates', () => {
   });
 });
 
-describe('fusion consumes the model point estimate, not its pre-escalated answer', () => {
+describe('which of the model’s two answers fusion consumes', () => {
   /** The shape the ML service actually returns: both answers, plus probabilities. */
   const mlResponse = (escalated, mostLikely) => ({
     esi: escalated,
@@ -217,38 +217,38 @@ describe('fusion consumes the model point estimate, not its pre-escalated answer
     topContributions: [],
   });
 
-  it('ignores the model’s own escalation by default, so escalation is not applied three times', () => {
-    // The model most likely says 3 but escalated itself to 2. The rules impose no
-    // floor. Fusing on the escalated answer would hand back 2 having already
-    // escalated once inside the model, once here if the rules had fired, and
-    // again if confidence were low — compressing the board.
+  it('honours the model’s own escalation by default', () => {
+    // The model most likely says 3 but its cumulative-probability rule escalated
+    // it to 2. Measured over 1500 held-out encounters, ignoring that escalation
+    // cost a third of the system's under-triage performance, so it is on.
     const result = fuse({
       ruleResult: rules(ESI.NON_URGENT),
       modelResult: mlResponse(ESI.EMERGENT, ESI.URGENT),
       confidence: confident,
       protocol,
     });
-    assert.equal(result.finalESI, ESI.URGENT);
-    assert.equal(result.modelESI, ESI.URGENT);
+    assert.equal(result.finalESI, ESI.EMERGENT);
   });
 
-  it('honours the model’s escalation when a site opts in', () => {
-    const modelLed = loadProtocol({ confidence: { useModelEscalation: true } });
+  it('lets a site fall back to the plain point estimate', () => {
+    const pointEstimateOnly = loadProtocol({ confidence: { useModelEscalation: false } });
     const result = fuse({
       ruleResult: rules(ESI.NON_URGENT),
       modelResult: mlResponse(ESI.EMERGENT, ESI.URGENT),
       confidence: confident,
-      protocol: modelLed,
+      protocol: pointEstimateOnly,
     });
-    assert.equal(result.finalESI, ESI.EMERGENT);
+    assert.equal(result.finalESI, ESI.URGENT);
+    assert.equal(result.modelESI, ESI.URGENT);
   });
 
-  it('still escalates through the ratchet when confidence is low', () => {
-    // Dropping the model's internal escalation must not cost the safety net that
-    // this layer owns.
+  it('applies the confidence ratchet on top of the model’s escalation', () => {
+    // The two mechanisms answer different questions — the model's rule is about
+    // predictive uncertainty for this patient, the ratchet is about how thin the
+    // evidence is — so both apply, and neither replaces the other.
     const result = fuse({
       ruleResult: rules(ESI.NON_URGENT),
-      modelResult: mlResponse(ESI.EMERGENT, ESI.URGENT),
+      modelResult: mlResponse(ESI.URGENT, ESI.LESS_URGENT),
       confidence: unsure,
       protocol,
     });

@@ -135,8 +135,11 @@
     },
     "surgeEscalationThreshold": 0.62,
     "escalationFloorESI": 2,
-    "useModelEscalation": false,
-    "_useModelEscalationNote": "The risk model can apply its own escalation-aware decision rule, which is right when it runs alone. In the hybrid this layer already escalates via the rule floor and the uncertainty ratchet, so consuming the model's pre-escalated answer would escalate three times over and compress the board onto ESI 2. Leave false unless running the model without the rule engine."
+
+    "useModelEscalation": true,
+    "escalationTau": 0.4,
+    "_escalationNote": "The model escalates when the cumulative probability of something worse reaches escalationTau, capped at its most likely class so the rule can only ever raise urgency. This was briefly switched off after it compressed a 20-patient demonstration roster onto ESI 2; measuring it against 1500 held-out encounters showed that cost a third of the system's under-triage performance (11.9% with it off against 8.6% at tau 0.4). The threshold, not the mechanism, was the right control. See docs/safety-case.md and docs/fusion-evaluation.json.",
+    "_escalationTauGuidance": "Lower escalates more readily. Measured on the reference model: 0.30 gives 6.2% under-triage against 45.5% over-triage; 0.40 gives 8.6% against 40.7%; 0.50 gives 10.7% against 36.4%. Above roughly 0.6 the rule stops firing at all. This is a capacity decision as much as a clinical one — a department with spare beds can afford to sit lower than one already full."
   },
 
   "modelSupportByBand": {

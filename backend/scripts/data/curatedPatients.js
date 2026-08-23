@@ -493,8 +493,14 @@ export const CURATED_PATIENTS = [
     transcript: { text: 'I cut my forearm on a machine at work, the bleeding has stopped', asr: 0.95 },
     vitals: benignAdultVitals({ painScore: reported(3) }),
     waitedMinutes: 40,
-    demonstrates: 'Low acuity anchor · complete data means the assistant can be confident enough to leave it low',
-    expect: { esi: 4 },
+    demonstrates: 'Low acuity anchor · complete data, and the cost of erring upward',
+    expect: {
+      esi: 4,
+      knownDeviation: {
+        actual: 3,
+        why: 'Simple wound repair is one resource, so ESI 4 is the textbook answer. The system sits at an operating point (escalation tau 0.4) that trades roughly 5 points of over-triage for a third less under-triage; this patient is part of that trade.',
+      },
+    },
   },
   {
     ref: 'P-5560',
@@ -509,7 +515,14 @@ export const CURATED_PATIENTS = [
     vitals: benignAdultVitals({ heartRate: measured(78), painScore: reported(3) }),
     waitedMinutes: 48,
     demonstrates: 'Musculoskeletal · no red flags, and the system does not invent any',
-    expect: { esi: 4 },
+    expect: {
+      esi: 4,
+      rules: [], // the point is that nothing fires
+      knownDeviation: {
+        actual: 3,
+        why: 'No rule fires — the floor stays at 5 and this is entirely the model. Uncomplicated back pain with normal observations is ESI 4; the model puts it at 3. Over-triage, recorded as such.',
+      },
+    },
   },
   {
     ref: 'P-8890',
