@@ -76,52 +76,67 @@ export function VitalsPanel({ encounterId, onSaved }) {
     }
   };
 
+  /**
+   * Collapsed by default. Reading the queue is the common act and recording a set
+   * of observations is the occasional one, so the form should not permanently cost
+   * the board four rows of height to sit open on a patient nobody is measuring.
+   */
   return (
-    <form className="vitals" onSubmit={save}>
-      <h3>Record observations</h3>
-      <p className="vitals__note">Leave anything unmeasured blank — the assistant accounts for what is missing.</p>
+    <details className="vitals">
+      <summary className="vitals__summary">
+        <span className="vitals__summary-title">Record observations</span>
+        <span className="vitals__summary-hint">
+          Vitals, bedside cues — saving re-scores the patient
+        </span>
+      </summary>
 
-      <div className="vitals__grid">
-        {FIELDS.map(([key, label, unit]) => (
-          <label key={key} className="vitals__field">
+      <form className="vitals__form" onSubmit={save}>
+        <p className="vitals__note">
+          Leave anything unmeasured blank — the assistant accounts for what is missing.
+        </p>
+
+        <div className="vitals__grid">
+          {FIELDS.map(([key, label, unit]) => (
+            <label key={key} className="vitals__field">
+              <span>
+                {label} <em>{unit}</em>
+              </span>
+              <input
+                type="number"
+                step="any"
+                value={values[key] ?? ''}
+                onChange={(e) => set(key, e.target.value)}
+              />
+            </label>
+          ))}
+          <label className="vitals__field">
             <span>
-              {label} <em>{unit}</em>
+              Pain <em>0–10, self-reported</em>
             </span>
-            <input
-              type="number"
-              step="any"
-              value={values[key] ?? ''}
-              onChange={(e) => set(key, e.target.value)}
-            />
+            <input type="number" min="0" max="10" value={pain} onChange={(e) => setPain(e.target.value)} />
           </label>
-        ))}
-        <label className="vitals__field">
-          <span>
-            Pain <em>0–10, self-reported</em>
-          </span>
-          <input type="number" min="0" max="10" value={pain} onChange={(e) => setPain(e.target.value)} />
-        </label>
-      </div>
+        </div>
 
-      <fieldset className="vitals__cues">
-        <legend>Observed at the bedside</legend>
-        {CUES.map(([key, label]) => (
-          <label key={key} className={`vitals__cue ${cues[key] ? 'is-on' : ''}`}>
-            <input
-              type="checkbox"
-              checked={Boolean(cues[key])}
-              onChange={(e) => setCues((prior) => ({ ...prior, [key]: e.target.checked }))}
-            />
-            {label}
-          </label>
-        ))}
-      </fieldset>
+        <fieldset className="vitals__cues">
+          <legend>Observed at the bedside</legend>
+          {CUES.map(([key, label]) => (
+            <label key={key} className={`vitals__cue ${cues[key] ? 'is-on' : ''}`}>
+              <input
+                type="checkbox"
+                checked={Boolean(cues[key])}
+                onChange={(e) => setCues((prior) => ({ ...prior, [key]: e.target.checked }))}
+              />
+              {label}
+            </label>
+          ))}
+        </fieldset>
 
-      {error && <p className="vitals__error">{error}</p>}
+        {error && <p className="vitals__error">{error}</p>}
 
-      <button type="submit" className="btn btn--primary" disabled={busy}>
-        {busy ? 'Scoring…' : 'Save and re-score'}
-      </button>
-    </form>
+        <button type="submit" className="btn btn--primary" disabled={busy}>
+          {busy ? 'Scoring…' : 'Save and re-score'}
+        </button>
+      </form>
+    </details>
   );
 }

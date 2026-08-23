@@ -1,34 +1,44 @@
 /* ---------------------------------------------------------------- ESI badge */
 
+/**
+ * The badge is a number and a word in a bordered chip. The number is what a nurse
+ * scans for, so it leads and carries the weight; the word is what makes the badge
+ * survive a colourblind reader or a monochrome print of the board.
+ */
 .esi-badge {
   display: inline-flex;
   align-items: baseline;
-  gap: 6px;
-  padding: 3px 9px;
+  gap: var(--sp-2);
+  padding: 3px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   white-space: nowrap;
 }
 
 .esi-badge strong {
-  font-size: 15px;
+  font-size: var(--text-lg);
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+}
+
+.esi-badge--lg {
+  padding: var(--sp-2) var(--sp-3);
+  gap: var(--sp-3);
 }
 
 .esi-badge--lg strong {
-  font-size: 26px;
+  font-size: 28px;
 }
 
 .esi-badge__label {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--text-sm);
+  font-weight: 550;
 }
 
 .esi-badge--critical {
   background: var(--wash-critical);
   border-color: var(--status-critical);
-  color: var(--status-critical);
+  color: var(--status-critical-ink);
 }
 .esi-badge--serious {
   background: var(--wash-serious);
@@ -46,45 +56,49 @@
   color: var(--ink);
 }
 .esi-badge--neutral {
-  background: var(--surface);
-  border-color: var(--hairline);
+  background: var(--surface-sunken);
+  border-color: var(--hairline-strong);
   color: var(--ink-secondary);
 }
 .esi-badge--unknown {
-  padding: 3px 9px;
+  display: inline-flex;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
   border: 1px dashed var(--ink-muted);
   color: var(--ink-muted);
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
-/* ------------------------------------------------------------ decay status */
+/* ------------------------------------------------------------- decay status */
 
 .decay {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--sp-2);
 }
 
 .decay__glyph {
-  font-size: 12px;
+  font-size: var(--text-sm);
   line-height: 1;
 }
 
 .decay__text {
   display: flex;
   flex-direction: column;
-  line-height: 1.25;
+  line-height: 1.3;
+  min-width: 0;
 }
 
 .decay__label {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--text-sm);
+  font-weight: 550;
+  white-space: nowrap;
 }
 
 .decay__ratio {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
+  white-space: nowrap;
 }
 
 .decay--good .decay__glyph {
@@ -93,30 +107,35 @@
 .decay--warning .decay__glyph {
   color: var(--status-warning);
 }
+.decay--warning .decay__label {
+  color: var(--status-warning-ink);
+}
 .decay--critical .decay__glyph {
   color: var(--status-critical);
 }
 .decay--critical .decay__label {
-  color: var(--status-critical);
-  font-weight: 600;
+  color: var(--status-critical-ink);
+  font-weight: 620;
 }
 
-/* ---------------------------------------------------------------- confidence */
+/* --------------------------------------------------------------- confidence */
 
 .confidence {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--hairline);
+  gap: var(--sp-2);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline-strong);
   background: var(--surface);
-  font-size: 12px;
+  font-size: var(--text-sm);
   white-space: nowrap;
+  color: var(--ink-secondary);
 }
 
 .confidence__score {
-  font-weight: 600;
+  font-weight: 620;
+  color: var(--ink);
 }
 
 .confidence--good {
@@ -128,20 +147,23 @@
 .confidence--critical {
   border-color: var(--status-critical);
   background: var(--wash-critical);
-  color: var(--status-critical);
-  font-weight: 600;
+  color: var(--status-critical-ink);
+  font-weight: 550;
+}
+.confidence--critical .confidence__score {
+  color: var(--status-critical-ink);
 }
 .confidence--missing {
   border-style: dashed;
   border-color: var(--status-critical);
-  color: var(--status-critical);
+  color: var(--status-critical-ink);
 }
 
 .confidence__bar {
   display: block;
   width: 54px;
   height: 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-pill);
   background: var(--hairline);
   overflow: hidden;
 }
@@ -149,11 +171,11 @@
 .confidence__bar-fill {
   display: block;
   height: 100%;
-  border-radius: 2px;
+  border-radius: var(--radius-pill);
   background: currentColor;
 }
 
-/* -------------------------------------------------------------- explain flags */
+/* ------------------------------------------------------------ explain flags */
 
 .explain-list {
   list-style: none;
@@ -161,11 +183,11 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: var(--sp-2);
 }
 
 .explain {
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-3);
   border-radius: var(--radius-sm);
   border: 1px solid var(--hairline);
   border-left-width: 3px;
@@ -181,67 +203,70 @@
   background: var(--wash-warning);
 }
 .explain--neutral {
-  border-left-color: var(--ink-muted);
+  border-left-color: var(--hairline-strong);
 }
 .explain--more {
   border-left-color: transparent;
   color: var(--ink-muted);
-  font-size: 12px;
+  font-size: var(--text-sm);
   text-align: center;
 }
 
 .explain__head {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
 .explain__label {
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: 620;
+  font-size: var(--text-base);
 }
 
 .explain__source {
   margin-left: auto;
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .explain__pill {
   font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 1px 6px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
+  letter-spacing: 0.05em;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline-strong);
   color: var(--ink-secondary);
 }
 
 .explain__pill--hard {
   border-color: var(--status-critical);
-  color: var(--status-critical);
-  font-weight: 600;
+  color: var(--status-critical-ink);
+  background: var(--surface);
 }
 
 .explain__evidence {
-  margin-top: 3px;
-  font-size: 12px;
+  margin-top: var(--sp-1);
+  font-size: var(--text-sm);
   color: var(--ink-secondary);
   font-variant-numeric: tabular-nums;
+  line-height: 1.5;
 }
 
 .explain__rationale {
-  margin-top: 4px;
-  font-size: 12px;
+  margin-top: var(--sp-1);
+  font-size: var(--text-sm);
   color: var(--ink-muted);
-  font-style: italic;
+  line-height: 1.5;
 }
 
 .explain-empty {
   margin: 0;
   color: var(--ink-muted);
-  font-size: 13px;
+  font-size: var(--text-base);
 }

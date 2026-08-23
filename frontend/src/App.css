@@ -1,12 +1,35 @@
+/**
+ * App shell.
+ *
+ * The board view is laid out to a fixed viewport height rather than growing with
+ * the queue. A triage board that scrolls the whole page pushes the department
+ * stats and the alert feed off screen exactly when the queue is longest — which
+ * is when a charge nurse most needs them. So the shell owns the height, and the
+ * queue scrolls inside it.
+ */
+
+/**
+ * A definite height, not a minimum. `min-height: 100vh` lets the flex column grow
+ * past the viewport, which silently defeats every `min-height: 0` below it — the
+ * panes stop scrolling and the whole page scrolls instead, taking the department
+ * stats and the queue off screen the moment the detail panel gets long.
+ */
 .app {
-  min-height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
+
+/* ------------------------------------------------------------------- header */
 
 .app__header {
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 12px 20px;
+  gap: var(--sp-5);
+  padding: 0 var(--sp-5);
+  height: 56px;
+  flex: 0 0 auto;
   background: var(--surface);
   border-bottom: 1px solid var(--hairline);
   position: sticky;
@@ -14,97 +37,181 @@
   z-index: 20;
 }
 
+.app__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.app__mark {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: var(--text-md);
+  letter-spacing: -0.02em;
+}
+
 .app__brand h1 {
   margin: 0;
-  font-size: 17px;
-  letter-spacing: -0.01em;
+  font-size: var(--text-lg);
+  font-weight: 650;
+  letter-spacing: -0.017em;
+  line-height: 1.15;
 }
 
 .app__sub {
-  font-size: 11px;
+  display: block;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
+  line-height: 1.3;
 }
 
 .app__tabs {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   margin-left: auto;
+  padding: 3px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius);
 }
 
 .app__tab {
-  padding: 7px 13px;
+  padding: 6px 13px;
   border-radius: var(--radius-sm);
-  border: 1px solid transparent;
+  border: none;
   background: none;
   color: var(--ink-secondary);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--text-base);
+  font-weight: 550;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
 .app__tab:hover {
-  background: var(--page);
+  color: var(--ink);
 }
 
 .app__tab.is-active {
-  background: var(--accent-wash);
-  border-color: var(--accent);
-  color: var(--accent);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
 }
 
 .app__theme select {
   font-family: inherit;
-  font-size: 12px;
-  padding: 5px 8px;
-  border: 1px solid var(--hairline);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding: 6px 8px;
+  border: 1px solid var(--hairline-strong);
   border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--ink);
 }
 
+/* --------------------------------------------------------------------- main */
+
 .app__main {
-  padding: 16px 20px 40px;
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-width: 1600px;
+  gap: var(--sp-4);
+  width: 100%;
+  max-width: 1680px;
   margin: 0 auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  /* Other tabs are ordinary documents and scroll here. */
+  overflow-y: auto;
+}
+
+/* The board view fills what is left after the header and hands its own children
+   the job of scrolling, so the stats stay pinned above a moving queue. */
+.app__main--board {
+  overflow: hidden;
 }
 
 .app__board-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
-  gap: 14px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: var(--sp-4);
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .app__board-main,
 .app__board-side {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--sp-4);
   min-width: 0;
+  min-height: 0;
+}
+
+.app__board-side {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+  padding-right: 2px;
+}
+
+.app__board-side::-webkit-scrollbar {
+  width: 10px;
+}
+
+.app__board-side::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-pill);
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
 
 .app__placeholder {
-  padding: 30px 20px;
+  padding: var(--sp-8) var(--sp-5);
   text-align: center;
   color: var(--ink-muted);
-  font-size: 13px;
+  font-size: var(--text-base);
   background: var(--surface);
-  border: 1px dashed var(--hairline);
+  border: 1px dashed var(--hairline-strong);
   border-radius: var(--radius);
 }
 
-@media (max-width: 1100px) {
+/* Below the two-column breakpoint the panes stack, and stacked panes that each
+   scroll independently are unusable — so the page goes back to scrolling. */
+@media (max-width: 1180px) {
+  .app {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
   .app__board-layout {
     grid-template-columns: 1fr;
   }
+  .app__main,
+  .app__main--board {
+    overflow: visible;
+  }
+  .app__board-side {
+    overflow: visible;
+  }
+  .board {
+    max-height: 70vh;
+  }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 760px) {
   .app__header {
+    height: auto;
     flex-wrap: wrap;
-    gap: 10px;
+    padding: var(--sp-3) var(--sp-4);
+    gap: var(--sp-3);
   }
   .app__tabs {
     order: 3;
@@ -112,14 +219,17 @@
     margin-left: 0;
     overflow-x: auto;
   }
+  .app__main {
+    padding: var(--sp-3);
+  }
 }
 
 /* --------------------------------------------------------------- model panel */
 
 .model-panel {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: var(--sp-4);
   align-items: start;
 }
 
@@ -127,75 +237,85 @@
   background: var(--surface);
   border: 1px solid var(--hairline);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: var(--sp-5);
+  box-shadow: var(--shadow-sm);
 }
 
 .model-card h2 {
-  margin: 0 0 8px;
-  font-size: 15px;
+  margin: 0 0 var(--sp-2);
+  font-size: var(--text-lg);
+  font-weight: 620;
+  letter-spacing: -0.012em;
 }
 
 .model-card h3 {
-  margin: 16px 0 6px;
-  font-size: 11px;
+  margin: var(--sp-5) 0 var(--sp-2);
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--ink-muted);
 }
 
 .model-card__lead {
-  margin: 0 0 6px;
-  font-size: 13px;
+  margin: 0 0 var(--sp-2);
+  font-size: var(--text-md);
 }
 
 .model-card__desc {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--text-base);
   color: var(--ink-secondary);
 }
 
 .model-card__note {
-  margin: 8px 0 0;
-  font-size: 11px;
+  margin: var(--sp-3) 0 0;
+  font-size: var(--text-sm);
   color: var(--ink-muted);
-  font-style: italic;
+  line-height: 1.55;
+  padding-left: var(--sp-3);
+  border-left: 2px solid var(--hairline-strong);
 }
 
 .model-card__error {
   margin: 0;
-  font-size: 12px;
-  color: var(--status-critical);
+  font-size: var(--text-base);
+  color: var(--status-critical-ink);
 }
 
 .model-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
-  margin-top: 6px;
+  font-size: var(--text-base);
+  margin-top: var(--sp-2);
 }
 
 .model-table th {
   text-align: left;
-  padding: 5px 8px 5px 0;
-  font-size: 11px;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--ink-muted);
   border-bottom: 1px solid var(--hairline);
 }
 
 .model-table td {
-  padding: 5px 8px 5px 0;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) 0;
   border-bottom: 1px solid var(--hairline);
+}
+
+.model-table tr:last-child td {
+  border-bottom: none;
 }
 
 .model-limits {
   margin: 0;
-  padding-left: 18px;
-  font-size: 12px;
+  padding-left: var(--sp-4);
+  font-size: var(--text-base);
   color: var(--ink-secondary);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }

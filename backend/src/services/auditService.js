@@ -493,6 +493,62 @@ export async function recordPhiAccess({ clinician, encounter, fields, purpose = 
   });
 }
 
+/**
+ * A patient leaving the active queue — taken into treatment, discharged, or
+ * recorded as having left without being seen.
+ *
+ * This is logged for the same reason an override is. Clearing someone from the
+ * board stops the decay clock and stops the re-triage loop watching them, so a
+ * patient removed in error becomes invisible to every safety mechanism in the
+ * system. The audit event is what makes that recoverable: it names who cleared
+ * whom, at what standing severity, and how long they had already waited.
+ *
+ * `waitedMinutes` is recorded at disposition rather than derived later, because
+ * once the encounter leaves the queue its decay state stops being updated and
+ * the number could never be reconstructed.
+ */
+export async function recordStatusChange({
+  clinician,
+  encounter,
+  fromStatus,
+  toStatus,
+  reasonText,
+  waitedMinutes,
+  session = {},
+}) {
+  return appendAuditEvent({
+    eventType: AUDIT_EVENT_TYPE.ENCOUNTER_STATUS_CHANGED,
+    actor: {
+      clinicianRef: clinician._id,
+      name: clinician.name,
+      role: clinician.role,
+      registrationNumber: clinician.registrationNumber,
+      sessionId: session.sessionId,
+      workstation: session.workstation,
+      ipAddress: session.ipAddress,
+    },
+    subject: {
+      encounterRef: encounter._id,
+      patientRef: encounter.patientRef,
+      displayRef: encounter.displayRef,
+    },
+    before: {
+      status: fromStatus,
+      esi: encounter.currentESI,
+      assignedBy: encounter.assignedBy,
+      decayStatus: encounter.queue?.decayStatus,
+    },
+    after: {
+      status: toStatus,
+      waitedMinutes: Number.isFinite(waitedMinutes) ? Math.round(waitedMinutes) : undefined,
+      safeWaitMinutes: encounter.queue?.safeWaitMinutes,
+    },
+    reasonText: reasonText?.trim() || undefined,
+    purpose: 'clinical_care',
+    retentionClass: RETENTION_CLASS.CLINICAL_AUDIT,
+  });
+}
+
 /** A safe waiting time exceeded. Evidence, recorded whether or not anyone acted. */
 export async function recordWaitBreach({ encounter, safeWaitMinutes, waitedMinutes }) {
   return appendAuditEvent({

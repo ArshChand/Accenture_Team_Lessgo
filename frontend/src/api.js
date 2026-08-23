@@ -32,6 +32,10 @@ export const api = {
   override: (encounterId, payload) =>
     request(`/encounters/${encounterId}/override`, { method: 'POST', body: JSON.stringify(payload) }),
 
+  dispositionOptions: () => request('/disposition/options'),
+  disposition: (encounterId, payload) =>
+    request(`/encounters/${encounterId}/disposition`, { method: 'POST', body: JSON.stringify(payload) }),
+
   revealIdentity: (encounterId, payload) =>
     request(`/encounters/${encounterId}/reveal-identity`, {
       method: 'POST',

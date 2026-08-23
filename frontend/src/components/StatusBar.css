@@ -1,98 +1,203 @@
 .statusbar {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--sp-3);
+  flex: 0 0 auto;
 }
 
-/* -------------------------------------------------------------------- surge */
+/* -------------------------------------------------------------- surge banner */
 
 .surge {
   display: flex;
-  gap: 12px;
+  gap: var(--sp-3);
   align-items: flex-start;
-  padding: 12px 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--status-serious);
+  padding: var(--sp-3) var(--sp-4);
   background: var(--wash-serious);
+  border: 1px solid var(--status-serious);
+  border-radius: var(--radius);
 }
 
 .surge__tag {
-  flex: none;
-  padding: 3px 9px;
-  border-radius: var(--radius-sm);
-  background: var(--status-serious);
-  color: #0b0b0b;
-  font-size: 11px;
+  flex: 0 0 auto;
+  font-size: var(--text-xs);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--surface);
+  background: var(--status-serious);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  margin-top: 1px;
+}
+
+/* The tag is a filled chip, so its label needs to clear contrast against the
+   fill rather than the page. Dark text on this step, in both modes. */
+:root .surge__tag {
+  color: #2a1206;
 }
 
 .surge__body {
-  font-size: 13px;
+  min-width: 0;
 }
 
-.surge__policy {
-  margin-top: 4px;
-  font-size: 12px;
+.surge__lead {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: 1.45;
+}
+
+.surge__metrics {
   color: var(--ink-secondary);
 }
 
-/* -------------------------------------------------------------------- stats */
+.surge__policy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-4);
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+}
+
+.surge__policy li {
+  position: relative;
+  padding-left: var(--sp-3);
+}
+
+.surge__policy li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+/* The one clause that is a safety guarantee rather than a behaviour change. */
+.surge__policy-hold {
+  font-weight: 620;
+  color: var(--ink);
+}
+
+/* ---------------------------------------------------------------- stat tiles */
 
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
+  gap: var(--sp-3);
 }
 
 .stat {
-  padding: 11px 13px;
-  border-radius: var(--radius);
-  border: 1px solid var(--hairline);
+  position: relative;
+  padding: var(--sp-3) var(--sp-4);
   background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
 }
 
 .stat__label {
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.055em;
   color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stat__value {
-  font-size: 26px;
-  font-weight: 600;
+  font-size: var(--text-hero);
+  font-weight: 620;
   line-height: 1.15;
+  letter-spacing: -0.025em;
   margin-top: 2px;
+  color: var(--ink);
 }
 
 .stat__value--sm {
-  font-size: 17px;
+  font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  line-height: 1.5;
+  margin-top: var(--sp-1);
 }
 
 .stat__hint {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
   margin-top: 2px;
+  line-height: 1.35;
 }
 
-/* Status tints are a secondary cue; the label and number carry the meaning. */
+/**
+ * Two levels of emphasis, not four.
+ *
+ * Only `critical` gets the top rail — the tile that means "act now" has to be the
+ * one thing the eye lands on. Warning and serious tint the number alone. A rail on
+ * every non-zero tile is what the previous board did, and with five of seven tiles
+ * lit there was no visual difference between "13 patients past their safe wait"
+ * and "7 the assistant is unsure about". One is an emergency; the other is
+ * context.
+ */
+.stat::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: transparent;
+}
+
+.stat--critical::before {
+  background: var(--status-critical);
+}
+
 .stat--critical {
-  border-color: var(--status-critical);
-  background: var(--wash-critical);
+  border-color: color-mix(in srgb, var(--status-critical) 40%, var(--hairline));
+}
+
+.stat--good .stat__value {
+  color: var(--status-good-ink);
+}
+.stat--warning .stat__value {
+  color: var(--status-warning-ink);
+}
+.stat--serious .stat__value {
+  color: var(--status-serious-ink);
 }
 .stat--critical .stat__value {
-  color: var(--status-critical);
+  color: var(--status-critical-ink);
 }
-.stat--serious {
-  border-color: var(--status-serious);
-  background: var(--wash-serious);
+
+/* --------------------------------------------------------- connection status */
+
+.stat--conn {
+  background: var(--surface-sunken);
 }
-.stat--warning {
-  border-color: var(--status-warning);
-  background: var(--wash-warning);
+
+.stat__pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--ink-muted);
 }
-.stat--good {
-  border-color: color-mix(in srgb, var(--status-good) 35%, var(--hairline));
+
+.stat__pulse--good {
+  background: var(--status-good);
+  box-shadow: 0 0 0 3px var(--wash-good);
+}
+
+.stat__pulse--warning {
+  background: var(--status-warning);
+  box-shadow: 0 0 0 3px var(--wash-warning);
 }

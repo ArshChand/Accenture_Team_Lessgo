@@ -11,22 +11,38 @@
  *
  * Dark mode is a selected set of steps against the dark surface, not an inverted
  * light palette: an ED runs through the night and the night shift should not be
- * staring at a white screen.
+ * staring at a white screen. The dark surfaces are a slightly cool neutral rather
+ * than pure black — at the luminance a ward monitor runs at, true black against
+ * white text is harsh over a twelve-hour shift, and the small amount of blue in
+ * the grey keeps the four status hues from muddying into the background.
+ *
+ * Every ink and status colour in both modes is checked against the surface it
+ * actually renders on. On the light surface `warning` and `serious` sit below 3:1
+ * as fills — that is inherent to those hues, and the mitigation is the icon and
+ * word that always accompany them. Where those roles are used as *text* they
+ * switch to the darker `--status-*-ink` steps, which clear 4.5:1.
  */
 
 :root {
   color-scheme: light;
 
   /* surfaces & ink */
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
+  --page: #f5f6f8;
+  --surface: #ffffff;
   --surface-raised: #ffffff;
-  --ink: #0b0b0b;
-  --ink-secondary: #52514e;
-  --ink-muted: #898781;
-  --hairline: #e1e0d9;
-  --border: rgba(11, 11, 11, 0.1);
-  --shadow: 0 1px 2px rgba(11, 11, 11, 0.06), 0 4px 12px rgba(11, 11, 11, 0.04);
+  --surface-sunken: #eef0f4;
+  --ink: #0e1116;
+  --ink-secondary: #4a5261;
+  --ink-muted: #6b7484;
+  --hairline: #e3e6eb;
+  --hairline-strong: #d3d8e0;
+  --border: rgba(14, 17, 22, 0.08);
+
+  /* Elevation is carried by a hairline ring plus a soft ambient shadow; the ring
+     is what survives in high-contrast and forced-colours modes. */
+  --shadow-sm: 0 1px 2px rgba(14, 17, 22, 0.05);
+  --shadow: 0 1px 2px rgba(14, 17, 22, 0.05), 0 4px 12px rgba(14, 17, 22, 0.05);
+  --shadow-lg: 0 2px 4px rgba(14, 17, 22, 0.06), 0 12px 32px rgba(14, 17, 22, 0.1);
 
   /* reserved status roles — never used for anything but state */
   --status-good: #0ca30c;
@@ -34,62 +50,140 @@
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
 
+  /* Text-safe steps of the same four roles. Same meaning, enough contrast to read. */
+  --status-good-ink: #006300;
+  --status-warning-ink: #8a5a00;
+  --status-serious-ink: #a8441c;
+  --status-critical-ink: #b02a2a;
+
   /* tinted washes for row backgrounds; the badge carries the actual signal */
   --wash-good: rgba(12, 163, 12, 0.07);
-  --wash-warning: rgba(250, 178, 25, 0.1);
+  --wash-warning: rgba(250, 178, 25, 0.11);
   --wash-serious: rgba(236, 131, 90, 0.11);
-  --wash-critical: rgba(208, 59, 59, 0.09);
+  --wash-critical: rgba(208, 59, 59, 0.08);
 
-  --accent: #2a78d6;
-  --accent-wash: rgba(42, 120, 214, 0.09);
+  --accent: #1f6fd0;
+  --accent-hover: #1a5fb4;
+  --accent-ink: #1f6fd0;
+  --accent-wash: rgba(31, 111, 208, 0.08);
+  --accent-contrast: #ffffff;
 
-  --radius: 8px;
-  --radius-sm: 5px;
-  --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --scrollbar-thumb: rgba(14, 17, 22, 0.2);
+  --scrollbar-thumb-hover: rgba(14, 17, 22, 0.34);
+
+  --radius-lg: 14px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-pill: 999px;
+
+  /* A 4px spacing scale. Named by step so a component reads its rhythm rather
+     than inventing one. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  /* Type scale. One family throughout — a display face on a clinical dashboard
+     reads as decoration and costs legibility at small sizes. */
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-hero: 30px;
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-fast: 110ms;
+  --dur: 180ms;
 }
 
+/**
+ * The dark values are declared under both scopes: the media query covers the OS
+ * setting, the attribute scope covers the in-app toggle, and the `:not()` guard
+ * lets an explicit light choice beat OS dark.
+ */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --surface-raised: #232322;
-    --ink: #ffffff;
-    --ink-secondary: #c3c2b7;
-    --ink-muted: #898781;
-    --hairline: #2c2c2a;
-    --border: rgba(255, 255, 255, 0.1);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+    --page: #0e1013;
+    --surface: #15181d;
+    --surface-raised: #1c2027;
+    --surface-sunken: #101318;
+    --ink: #f4f6f8;
+    --ink-secondary: #adb6c4;
+    --ink-muted: #7d8898;
+    --hairline: #262b33;
+    --hairline-strong: #333a45;
+    --border: rgba(255, 255, 255, 0.09);
 
-    --wash-good: rgba(12, 163, 12, 0.16);
-    --wash-warning: rgba(250, 178, 25, 0.16);
-    --wash-serious: rgba(236, 131, 90, 0.16);
-    --wash-critical: rgba(208, 59, 59, 0.18);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.32);
+    --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.5), 0 16px 40px rgba(0, 0, 0, 0.45);
 
-    --accent: #3987e5;
-    --accent-wash: rgba(57, 135, 229, 0.16);
+    /* All four status roles clear 3:1 on the dark surface, so text and fill can
+       share a step and no separate ink ramp is needed. */
+    --status-good-ink: #0ca30c;
+    --status-warning-ink: #fab219;
+    --status-serious-ink: #ec835a;
+    --status-critical-ink: #e26363;
+
+    --wash-good: rgba(12, 163, 12, 0.14);
+    --wash-warning: rgba(250, 178, 25, 0.13);
+    --wash-serious: rgba(236, 131, 90, 0.14);
+    --wash-critical: rgba(208, 59, 59, 0.16);
+
+    --accent: #5b9cf0;
+    --accent-hover: #79aef4;
+    --accent-ink: #8dbaf6;
+    --accent-wash: rgba(91, 156, 240, 0.14);
+    --accent-contrast: #0b1220;
+
+    --scrollbar-thumb: rgba(255, 255, 255, 0.16);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --page: #0d0d0d;
-  --surface: #1a1a19;
-  --surface-raised: #232322;
-  --ink: #ffffff;
-  --ink-secondary: #c3c2b7;
-  --ink-muted: #898781;
-  --hairline: #2c2c2a;
-  --border: rgba(255, 255, 255, 0.1);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --page: #0e1013;
+  --surface: #15181d;
+  --surface-raised: #1c2027;
+  --surface-sunken: #101318;
+  --ink: #f4f6f8;
+  --ink-secondary: #adb6c4;
+  --ink-muted: #7d8898;
+  --hairline: #262b33;
+  --hairline-strong: #333a45;
+  --border: rgba(255, 255, 255, 0.09);
 
-  --wash-good: rgba(12, 163, 12, 0.16);
-  --wash-warning: rgba(250, 178, 25, 0.16);
-  --wash-serious: rgba(236, 131, 90, 0.16);
-  --wash-critical: rgba(208, 59, 59, 0.18);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.5), 0 16px 40px rgba(0, 0, 0, 0.45);
 
-  --accent: #3987e5;
-  --accent-wash: rgba(57, 135, 229, 0.16);
+  --status-good-ink: #0ca30c;
+  --status-warning-ink: #fab219;
+  --status-serious-ink: #ec835a;
+  --status-critical-ink: #e26363;
+
+  --wash-good: rgba(12, 163, 12, 0.14);
+  --wash-warning: rgba(250, 178, 25, 0.13);
+  --wash-serious: rgba(236, 131, 90, 0.14);
+  --wash-critical: rgba(208, 59, 59, 0.16);
+
+  --accent: #5b9cf0;
+  --accent-hover: #79aef4;
+  --accent-ink: #8dbaf6;
+  --accent-wash: rgba(91, 156, 240, 0.14);
+  --accent-contrast: #0b1220;
+
+  --scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
 }
 
 * {
@@ -101,9 +195,11 @@ body {
   font-family: var(--font);
   background: var(--page);
   color: var(--ink);
-  font-size: 14px;
+  font-size: var(--text-base);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv05' 1, 'ss01' 1;
 }
 
 button {
@@ -112,7 +208,55 @@ button {
   cursor: pointer;
 }
 
-/* Anything conveying state gets tabular figures so columns line up as they change. */
+/* One focus treatment everywhere, so keyboard position is never ambiguous. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/**
+ * Scrollbars.
+ *
+ * The queue is a scrolling surface a nurse reads under time pressure, so the
+ * scrollbar is styled to stay visible and legible rather than the overlay style
+ * that fades out — how far down the list you are is information here. Firefox
+ * gets the standard properties; WebKit and Blink get the pseudo-elements.
+ */
+.scroll-area {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+  overscroll-behavior: contain;
+}
+
+.scroll-area::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-area::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-pill);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+.scroll-area::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+
+.scroll-area::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Anything conveying state gets tabular figures so columns line up as they change.
+   Large standalone numbers deliberately do not — tabular figures give every digit
+   the width of a zero, which reads loose at display sizes. */
 .tabular {
   font-variant-numeric: tabular-nums;
 }
@@ -124,4 +268,89 @@ button {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ buttons */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-size: var(--text-base);
+  font-weight: 550;
+  line-height: 1.2;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--surface-sunken);
+  border-color: var(--ink-muted);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-secondary);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--surface-sunken);
+  border-color: transparent;
+  color: var(--ink);
+}
+
+.btn--small {
+  padding: 5px 10px;
+  font-size: var(--text-sm);
+}
+
+.btn--block {
+  width: 100%;
+}
+
+/* A destructive-adjacent action: clearing a patient off the board. Outlined
+   rather than filled — it should look deliberate, not inviting. */
+.btn--danger {
+  border-color: var(--status-critical);
+  color: var(--status-critical-ink);
+  background: transparent;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: var(--wash-critical);
+  border-color: var(--status-critical);
+  color: var(--status-critical-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
