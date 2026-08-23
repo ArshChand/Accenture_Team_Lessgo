@@ -13,11 +13,19 @@
 
 .modal {
   background: var(--surface-raised);
-  border: 1px solid var(--hairline-strong);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-xl);
   width: 100%;
   max-width: 540px;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .modal {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  }
 }
 
 .modal__head {
@@ -119,7 +127,13 @@
   cursor: pointer;
   text-align: center;
   background: var(--surface);
-  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+  transform: scale(1);
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease),
+    box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease-spring);
+}
+
+.override__level:active {
+  transform: scale(0.95);
 }
 
 .override__level input {
@@ -148,16 +162,19 @@
   border-color: var(--accent);
   border-width: 2px;
   background: var(--accent-wash);
+  box-shadow: var(--glow-accent);
 }
 
 .override__level.is-active.is-escalation {
   border-color: var(--status-critical);
   background: var(--wash-critical);
+  box-shadow: var(--glow-critical);
 }
 
 .override__level.is-active.is-deescalation {
   border-color: var(--status-warning);
   background: var(--wash-warning);
+  box-shadow: var(--glow-warning);
 }
 
 .override__notice {

@@ -35,15 +35,32 @@
   font-weight: 550;
 }
 
+/**
+ * ESI 1 and 2 get a gradient border and an ambient glow; 3 keeps a flat wash;
+ * 4/5 stay plain. The technique is a two-layer background — an opaque fill
+ * painted to the padding box, the gradient painted to the border box — rather
+ * than an actual `border-image`, so the badge keeps a real `border-radius`.
+ *
+ * The fill has to be opaque. The first attempt used the translucent wash as
+ * that fill, on the assumption it would sit inside the border ring with
+ * nothing behind it — but the border-box layer is not confined to the ring,
+ * it fills the whole box, and CSS paints background layers first-listed-on-top.
+ * At 16% alpha the wash barely occluded the gradient sitting under it, so the
+ * badge read as a solid saturated block rather than a tinted pill with a
+ * gradient edge. `--surface` as the fill is fully opaque and actually hides
+ * the gradient everywhere except the 1px ring it is meant to show through.
+ */
 .esi-badge--critical {
-  background: var(--wash-critical);
-  border-color: var(--status-critical);
+  border: 1px solid transparent;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--grad-critical) border-box;
   color: var(--status-critical-ink);
+  box-shadow: var(--glow-critical);
 }
 .esi-badge--serious {
-  background: var(--wash-serious);
-  border-color: var(--status-serious);
-  color: var(--ink);
+  border: 1px solid transparent;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--grad-serious) border-box;
+  color: var(--status-serious-ink);
+  box-shadow: var(--glow-serious);
 }
 .esi-badge--warning {
   background: var(--wash-warning);
@@ -112,6 +129,7 @@
 }
 .decay--critical .decay__glyph {
   color: var(--status-critical);
+  text-shadow: 0 0 8px rgba(208, 59, 59, 0.55);
 }
 .decay--critical .decay__label {
   color: var(--status-critical-ink);
@@ -149,6 +167,7 @@
   background: var(--wash-critical);
   color: var(--status-critical-ink);
   font-weight: 550;
+  box-shadow: var(--glow-critical);
 }
 .confidence--critical .confidence__score {
   color: var(--status-critical-ink);
@@ -192,11 +211,13 @@
   border: 1px solid var(--hairline);
   border-left-width: 3px;
   background: var(--surface);
+  transition: box-shadow var(--dur) var(--ease);
 }
 
 .explain--critical {
   border-left-color: var(--status-critical);
   background: var(--wash-critical);
+  box-shadow: var(--glow-critical);
 }
 .explain--warning {
   border-left-color: var(--status-warning);

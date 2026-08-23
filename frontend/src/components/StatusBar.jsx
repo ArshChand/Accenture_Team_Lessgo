@@ -59,10 +59,17 @@ export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, l
 
       <div className="stats">
         <Stat label="Waiting" value={waiting} hint="Currently on the board" />
+        {/*
+          The bento grid's one adaptive cell: this tile grows and takes the glow
+          only once there is something in it to be urgent about. A dashboard that
+          is always dramatic stops reading as dramatic — the emphasis has to be
+          earned by the number, not applied by the layout.
+        */}
         <Stat
           label="Safe wait exceeded"
           value={breached}
           status={breached > 0 ? 'critical' : 'neutral'}
+          hero={breached > 0}
           hint={breached > 0 ? 'Needs attention now' : 'All within limits'}
         />
         <Stat
@@ -111,9 +118,9 @@ export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, l
  * digit the width of a zero and a number like 24 reads loose and misaligned with
  * its own label.
  */
-function Stat({ label, value, status = 'neutral', hint }) {
+function Stat({ label, value, status = 'neutral', hint, hero = false }) {
   return (
-    <div className={`stat stat--${status}`}>
+    <div className={`stat stat--${status} ${hero ? 'stat--hero' : ''}`}>
       <div className="stat__label">{label}</div>
       <div className="stat__value">{value}</div>
       {hint && <div className="stat__hint">{hint}</div>}

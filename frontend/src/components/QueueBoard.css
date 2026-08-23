@@ -1,8 +1,8 @@
 .board {
   background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -77,11 +77,11 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--status-serious-ink);
-  background: var(--wash-serious);
-  border: 1px solid var(--status-serious);
+  color: #2a1206;
+  background: linear-gradient(155deg, #f39a76, var(--status-serious));
   border-radius: var(--radius-sm);
-  padding: 1px 7px;
+  padding: 1px 8px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18) inset;
 }
 
 /* ------------------------------------------------------------ scrolling list */
@@ -99,7 +99,9 @@
   border-spacing: 0;
 }
 
-/* The header travels with the scroll so the columns stay named at any depth. */
+/* The header travels with the scroll so the columns stay named at any depth.
+   Frosted rather than a flat fill, so rows visibly pass underneath it — the
+   layered read a sticky header is supposed to give. */
 .board__table thead th {
   position: sticky;
   top: 0;
@@ -114,6 +116,14 @@
   background: var(--surface-sunken);
   border-bottom: 1px solid var(--hairline);
   white-space: nowrap;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .board__table thead th {
+    background: color-mix(in srgb, var(--surface-sunken) 82%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
 }
 
 .board__table td {
@@ -137,15 +147,21 @@
  */
 .board__row {
   cursor: pointer;
-  transition: background var(--dur-fast) var(--ease);
+  transition: background var(--dur-fast) var(--ease), box-shadow var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
 }
 
 .board__row > td:first-child {
+  position: relative;
   box-shadow: inset 3px 0 0 transparent;
 }
 
+/* The hover lift is a hairline transform, not a translateX that would misalign
+   a row against the sticky header's columns — just enough to read as "this row
+   responded to you". */
 .board__row:hover {
   background: var(--accent-wash);
+  transform: scale(1.002);
 }
 
 .board__row:focus-visible {
@@ -158,20 +174,22 @@
 }
 
 .board__row--red > td:first-child {
-  box-shadow: inset 3px 0 0 var(--status-critical);
+  box-shadow: inset 3px 0 0 var(--status-critical), 4px 0 12px -4px rgba(208, 59, 59, 0.5);
 }
 
 /* Deliberately no row-level wash for the breached state. In a department where
    most of the queue is past its safe wait — the case this board is built for —
    a red tint per row paints the whole surface one colour and the ranking stops
-   being readable. The rail, the decay label and the glyph carry it instead. */
+   being readable. The rail carries a soft glow instead of a flat fill: enough
+   to separate a breached row from its neighbours on a glance down the column,
+   without repainting the row itself. */
 
 .board__row.is-selected {
   background: var(--accent-wash);
 }
 
 .board__row.is-selected > td:first-child {
-  box-shadow: inset 3px 0 0 var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent), 4px 0 14px -4px rgba(31, 111, 208, 0.45);
 }
 
 /* --------------------------------------------------------------- row content */

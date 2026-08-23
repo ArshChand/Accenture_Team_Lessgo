@@ -30,8 +30,7 @@
   padding: 0 var(--sp-5);
   height: 56px;
   flex: 0 0 auto;
-  background: var(--surface);
-  border-bottom: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--glass-border);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -49,7 +48,8 @@
   height: 30px;
   flex: 0 0 auto;
   border-radius: 8px;
-  background: var(--accent);
+  background: linear-gradient(155deg, var(--accent-hover), var(--accent));
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset, 0 4px 10px -3px rgba(31, 111, 208, 0.5);
   color: var(--accent-contrast);
   display: grid;
   place-items: center;
@@ -235,10 +235,18 @@
 
 .model-card {
   background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-lg);
   padding: var(--sp-5);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow);
+  transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+
+.model-card:hover {
+  border-color: var(--edge-strong);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 .model-card h2 {

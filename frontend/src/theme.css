@@ -71,6 +71,38 @@
   --scrollbar-thumb: rgba(14, 17, 22, 0.2);
   --scrollbar-thumb-hover: rgba(14, 17, 22, 0.34);
 
+  /**
+   * The bento/glass layer.
+   *
+   * `--edge` is a subtler line than `--hairline`: a translucent tint of ink
+   * rather than a flat grey, so a card edge reads as "the surface catching
+   * light" instead of a ruled border. In dark mode this becomes translucent
+   * *white* — the same idea, same direction light comes from.
+   *
+   * `--glass-*` back a small number of chrome surfaces (the sticky header, the
+   * modal, the sticky table head) with a blurred, translucent fill. It is
+   * deliberately not used on data-bearing surfaces — blurring the thing a nurse
+   * is trying to read under time pressure is the wrong trade, however good it
+   * looks in a screenshot.
+   */
+  --edge: rgba(14, 17, 22, 0.07);
+  --edge-strong: rgba(14, 17, 22, 0.12);
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(14, 17, 22, 0.06);
+  --glass-blur: 20px;
+
+  --shadow-xl: 0 4px 8px rgba(14, 17, 22, 0.06), 0 24px 48px -12px rgba(14, 17, 22, 0.16);
+
+  /* Severity glow. Reserved for the two most urgent status roles — a glow on
+     every tile at every severity stops meaning "pay attention" and starts
+     meaning nothing, the same reasoning that kept the row wash to critical
+     only. `good` never glows: a calm state calling attention to itself reads
+     as a bug, not a reassurance. */
+  --glow-critical: 0 0 0 1px rgba(208, 59, 59, 0.28), 0 8px 24px -6px rgba(208, 59, 59, 0.38);
+  --glow-serious: 0 0 0 1px rgba(236, 131, 90, 0.22), 0 6px 18px -6px rgba(236, 131, 90, 0.28);
+  --glow-warning: 0 0 0 1px rgba(250, 178, 25, 0.2), 0 4px 14px -6px rgba(250, 178, 25, 0.22);
+  --glow-accent: 0 0 0 1px rgba(31, 111, 208, 0.22), 0 6px 20px -6px rgba(31, 111, 208, 0.3);
+
   --radius-lg: 14px;
   --radius: 10px;
   --radius-sm: 6px;
@@ -99,8 +131,14 @@
   --text-hero: 30px;
 
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --dur-fast: 110ms;
   --dur: 180ms;
+
+  /* Two-stop gradients, critical and serious only — both stops independently
+     clear 4.5:1 against every surface they render on, checked, not eyeballed. */
+  --grad-critical: linear-gradient(135deg, #b02a2a, #7a1c1c);
+  --grad-serious: linear-gradient(135deg, #a8441c, #7a3012);
 }
 
 /**
@@ -146,6 +184,21 @@
 
     --scrollbar-thumb: rgba(255, 255, 255, 0.16);
     --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+
+    --edge: rgba(255, 255, 255, 0.09);
+    --edge-strong: rgba(255, 255, 255, 0.14);
+    --glass-bg: rgba(21, 24, 29, 0.68);
+    --glass-border: rgba(255, 255, 255, 0.08);
+
+    --shadow-xl: 0 4px 10px rgba(0, 0, 0, 0.45), 0 28px 56px -14px rgba(0, 0, 0, 0.6);
+
+    --glow-critical: 0 0 0 1px rgba(226, 99, 99, 0.32), 0 0 28px -4px rgba(226, 99, 99, 0.45);
+    --glow-serious: 0 0 0 1px rgba(236, 131, 90, 0.26), 0 0 22px -6px rgba(236, 131, 90, 0.34);
+    --glow-warning: 0 0 0 1px rgba(250, 178, 25, 0.22), 0 0 16px -6px rgba(250, 178, 25, 0.26);
+    --glow-accent: 0 0 0 1px rgba(91, 156, 240, 0.28), 0 0 24px -6px rgba(91, 156, 240, 0.4);
+
+    --grad-critical: linear-gradient(135deg, #ff8a8a, #ef4444);
+    --grad-serious: linear-gradient(135deg, #ffab8a, #ec835a);
   }
 }
 
@@ -184,6 +237,21 @@
 
   --scrollbar-thumb: rgba(255, 255, 255, 0.16);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+
+  --edge: rgba(255, 255, 255, 0.09);
+  --edge-strong: rgba(255, 255, 255, 0.14);
+  --glass-bg: rgba(21, 24, 29, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  --shadow-xl: 0 4px 10px rgba(0, 0, 0, 0.45), 0 28px 56px -14px rgba(0, 0, 0, 0.6);
+
+  --glow-critical: 0 0 0 1px rgba(226, 99, 99, 0.32), 0 0 28px -4px rgba(226, 99, 99, 0.45);
+  --glow-serious: 0 0 0 1px rgba(236, 131, 90, 0.26), 0 0 22px -6px rgba(236, 131, 90, 0.34);
+  --glow-warning: 0 0 0 1px rgba(250, 178, 25, 0.22), 0 0 16px -6px rgba(250, 178, 25, 0.26);
+  --glow-accent: 0 0 0 1px rgba(91, 156, 240, 0.28), 0 0 24px -6px rgba(91, 156, 240, 0.4);
+
+  --grad-critical: linear-gradient(135deg, #ff8a8a, #ef4444);
+  --grad-serious: linear-gradient(135deg, #ffab8a, #ec835a);
 }
 
 * {
@@ -272,6 +340,12 @@ button {
 
 /* ------------------------------------------------------------------ buttons */
 
+/**
+ * Buttons carry two kinds of feedback: a hover lift (this is clickable, and
+ * raised above the surface) and an active press (this registered your click).
+ * The press is the "tactile" part — a quick scale-down on `:active`, eased with
+ * a slight overshoot on release so it settles rather than snapping back.
+ */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -285,13 +359,21 @@ button {
   font-size: var(--text-base);
   font-weight: 550;
   line-height: 1.2;
+  transform: translateY(0) scale(1);
   transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
-    color var(--dur-fast) var(--ease);
+    color var(--dur-fast) var(--ease), box-shadow var(--dur) var(--ease),
+    transform var(--dur) var(--ease-spring);
 }
 
 .btn:hover:not(:disabled) {
   background: var(--surface-sunken);
   border-color: var(--ink-muted);
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  transition-duration: var(--dur-fast);
 }
 
 .btn:disabled {
@@ -300,14 +382,16 @@ button {
 }
 
 .btn--primary {
-  background: var(--accent);
+  background: linear-gradient(160deg, var(--accent-hover), var(--accent));
   border-color: var(--accent);
   color: var(--accent-contrast);
+  box-shadow: 0 1px 2px rgba(14, 17, 22, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 }
 
 .btn--primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: linear-gradient(160deg, var(--accent-hover), var(--accent-hover));
   border-color: var(--accent-hover);
+  box-shadow: var(--glow-accent);
 }
 
 .btn--ghost {
@@ -320,6 +404,7 @@ button {
   background: var(--surface-sunken);
   border-color: transparent;
   color: var(--ink);
+  transform: none;
 }
 
 .btn--small {
@@ -332,7 +417,8 @@ button {
 }
 
 /* A destructive-adjacent action: clearing a patient off the board. Outlined
-   rather than filled — it should look deliberate, not inviting. */
+   rather than filled — it should look deliberate, not inviting — but it still
+   glows on hover so intent registers before the click commits. */
 .btn--danger {
   border-color: var(--status-critical);
   color: var(--status-critical-ink);
@@ -343,6 +429,26 @@ button {
   background: var(--wash-critical);
   border-color: var(--status-critical);
   color: var(--status-critical-ink);
+  box-shadow: var(--glow-critical);
+}
+
+/**
+ * Glass chrome — sticky headers, the modal surface. Never a data-bearing
+ * surface, where blurring the content underneath would fight legibility rather
+ * than support it. `@supports` guards the fallback: a plain, still-translucent
+ * surface fill for the one in twenty browsers without `backdrop-filter`.
+ */
+.glass {
+  background: var(--surface);
+  border-color: var(--glass-border);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

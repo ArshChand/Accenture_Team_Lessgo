@@ -72,7 +72,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="app__header">
+      <header className="app__header glass">
         <div className="app__brand">
           <span className="app__mark" aria-hidden="true">
             T
