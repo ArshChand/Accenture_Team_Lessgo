@@ -110,6 +110,14 @@
   overflow-x: auto;
   flex: 1 1 auto;
   min-height: 0;
+  /* Applies to programmatic and anchor scrolls (jumping to an alerted patient),
+     not to the wheel — wheel smoothness is the browser's own and is won by
+     keeping per-frame paint cheap, which is what the two rules above are for. */
+  scroll-behavior: smooth;
+  /* Momentum scrolling on touch, and keeps a scroll that reaches the end of the
+     queue from chaining out to the page behind it. */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .board__table {
@@ -137,13 +145,17 @@
   white-space: nowrap;
 }
 
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .board__table thead th {
-    background: color-mix(in srgb, var(--surface-sunken) 82%, transparent);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-  }
-}
+/**
+ * The sticky header is deliberately opaque rather than frosted.
+ *
+ * It carried `backdrop-filter: blur()` for a while, which looked good in a still
+ * screenshot and cost real frames in motion: a blurred backdrop on a sticky
+ * element has to be re-sampled and re-blurred every time anything moves behind
+ * it, which on a scrolling table is every frame of every scroll. Glass is kept
+ * where it is free — the app header and the modal, which sit over content that
+ * is not moving — and dropped here, where the whole point of the surface is
+ * that things move underneath it.
+ */
 
 .board__table td {
   padding: var(--sp-3) var(--sp-4);
@@ -178,9 +190,12 @@
 /* The hover lift is a hairline transform, not a translateX that would misalign
    a row against the sticky header's columns — just enough to read as "this row
    responded to you". */
+/* Background only — no transform. A `scale()` on a table row repaints the whole
+   row, and during a wheel scroll every row that passes under the stationary
+   cursor fires its own hover repaint, so the cue that was meant to make the
+   board feel responsive was making it feel choppy instead. */
 .board__row:hover {
   background: var(--accent-wash);
-  transform: scale(1.002);
 }
 
 .board__row:focus-visible {
