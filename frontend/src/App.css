@@ -48,8 +48,8 @@
   height: 30px;
   flex: 0 0 auto;
   border-radius: 8px;
-  background: linear-gradient(155deg, var(--accent-hover), var(--accent));
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset, 0 4px 10px -3px rgba(31, 111, 208, 0.5);
+  background: linear-gradient(155deg, var(--accent), var(--accent-hover));
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset, 0 4px 10px -3px rgba(161, 0, 255, 0.5);
   color: var(--accent-contrast);
   display: grid;
   place-items: center;
@@ -174,13 +174,32 @@
 }
 
 .app__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
   padding: var(--sp-8) var(--sp-5);
   text-align: center;
   color: var(--ink-muted);
   font-size: var(--text-base);
   background: var(--surface);
-  border: 1px dashed var(--hairline-strong);
-  border-radius: var(--radius);
+  border: 1px dashed var(--edge-strong);
+  border-radius: var(--radius-lg);
+}
+
+.app__placeholder::before {
+  content: '>';
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--surface-sunken);
+  border: 1px solid var(--edge);
+  color: var(--accent-ink);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 /* Below the two-column breakpoint the panes stack, and stacked panes that each

@@ -62,10 +62,21 @@
   --wash-serious: rgba(236, 131, 90, 0.11);
   --wash-critical: rgba(208, 59, 59, 0.08);
 
-  --accent: #1f6fd0;
-  --accent-hover: #1a5fb4;
-  --accent-ink: #1f6fd0;
-  --accent-wash: rgba(31, 111, 208, 0.08);
+  /**
+   * Brand accent — Accenture purple through deep magenta.
+   *
+   * Public-knowledge approximations of Accenture's identity colours (roughly
+   * #A100FF / #E3007D), not values pulled from a live brand guideline — this is
+   * a stylistic homage for a submission to Accenture's own challenge, not a
+   * reproduction of their trademarked mark. `--accent` is the fill/border/ring
+   * role; every place it is used as running text goes through `--accent-ink`
+   * instead, checked separately, because a hue saturated enough to read as
+   * "electric" at button scale is not automatically legible as body text.
+   */
+  --accent: #a100ff;
+  --accent-hover: #e3007d;
+  --accent-ink: #a100ff;
+  --accent-wash: rgba(161, 0, 255, 0.08);
   --accent-contrast: #ffffff;
 
   --scrollbar-thumb: rgba(14, 17, 22, 0.2);
@@ -93,6 +104,13 @@
 
   --shadow-xl: 0 4px 8px rgba(14, 17, 22, 0.06), 0 24px 48px -12px rgba(14, 17, 22, 0.16);
 
+  /* The one token that cannot travel unchanged from the brief: `rgba(255,255,255,
+     0.12)` is a highlight edge on a dark surface and is invisible — not subtle,
+     genuinely imperceptible — on a white one. Light keeps the same idea (a
+     glass-cut edge reading as light catching the surface) at an equivalent
+     ink-based value; dark gets the literal requested value below. */
+  --ink-stark: var(--ink);
+
   /* Severity glow. Reserved for the two most urgent status roles — a glow on
      every tile at every severity stops meaning "pay attention" and starts
      meaning nothing, the same reasoning that kept the row wash to critical
@@ -101,9 +119,16 @@
   --glow-critical: 0 0 0 1px rgba(208, 59, 59, 0.28), 0 8px 24px -6px rgba(208, 59, 59, 0.38);
   --glow-serious: 0 0 0 1px rgba(236, 131, 90, 0.22), 0 6px 18px -6px rgba(236, 131, 90, 0.28);
   --glow-warning: 0 0 0 1px rgba(250, 178, 25, 0.2), 0 4px 14px -6px rgba(250, 178, 25, 0.22);
-  --glow-accent: 0 0 0 1px rgba(31, 111, 208, 0.22), 0 6px 20px -6px rgba(31, 111, 208, 0.3);
+  --glow-accent: 0 0 0 1px rgba(161, 0, 255, 0.22), 0 6px 20px -6px rgba(161, 0, 255, 0.3);
 
-  --radius-lg: 14px;
+  /* `--radius-lg` is what every bento card is built on, so this is the one
+     token that decides "bubbly" vs "geometric" for the whole board. Not taken
+     to a true 0 — a perfectly square corner on a 1px hairline border aliases
+     visibly at typical display scaling, which reads as a rendering glitch, not
+     as precision. `--radius` and `--radius-sm` (buttons, badges, chips) are
+     untouched: the ask was to sharpen the cards, not to turn every pill-shaped
+     control into a rectangle. */
+  --radius-lg: 4px;
   --radius: 10px;
   --radius-sm: 6px;
   --radius-pill: 999px;
@@ -139,6 +164,18 @@
      clear 4.5:1 against every surface they render on, checked, not eyeballed. */
   --grad-critical: linear-gradient(135deg, #b02a2a, #7a1c1c);
   --grad-serious: linear-gradient(135deg, #a8441c, #7a3012);
+
+  /* A fixed, near-imperceptible wash behind the whole app — two large, soft
+     brand-purple/magenta orbs anchored top-right and bottom-left, so the page
+     plane has depth the way a flat --page fill never does. The softness comes
+     from gradient radius and a long transparent falloff rather than an actual
+     `filter: blur()` on a full-page layer — the visual result is the same
+     "out-of-focus orb" look, at no scroll/repaint cost, which is why every
+     product using this technique (Vercel, Linear, Stripe) builds it this way
+     too. Kept far below anything that would compete with content: cards are
+     fully opaque and sit above it, so it is only ever visible in the margins. */
+  --ambient: radial-gradient(1300px 800px at 100% -8%, rgba(161, 0, 255, 0.055), transparent 65%),
+    radial-gradient(1200px 760px at -6% 106%, rgba(227, 0, 125, 0.04), transparent 62%);
 }
 
 /**
@@ -176,29 +213,48 @@
     --wash-serious: rgba(236, 131, 90, 0.14);
     --wash-critical: rgba(208, 59, 59, 0.16);
 
-    --accent: #5b9cf0;
-    --accent-hover: #79aef4;
-    --accent-ink: #8dbaf6;
-    --accent-wash: rgba(91, 156, 240, 0.14);
+    /* Brighter than light mode's fill on purpose: the rich #A100FF/#E3007D pair
+       fails 4.5:1 as *text* against every dark surface (checked — 3.1–4.1),
+       the same reason the original blue accent stepped up in dark mode. Paired
+       with dark contrast text (#0b1220 below), not white — white on these
+       fills lands at 3.2–3.9, under the 4.5 bar; dark ink clears 4.8–6.7. */
+    --accent: #be63ff;
+    --accent-hover: #ff3fb0;
+    --accent-ink: #be63ff;
+    --accent-wash: rgba(190, 99, 255, 0.14);
     --accent-contrast: #0b1220;
 
     --scrollbar-thumb: rgba(255, 255, 255, 0.16);
     --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
 
     --edge: rgba(255, 255, 255, 0.09);
-    --edge-strong: rgba(255, 255, 255, 0.14);
+    /* The literal value from the brief: a crisp white-at-12% edge reads as
+       "glass-cut" specifically on a dark surface — this is where it was
+       written for. */
+    --edge-strong: rgba(255, 255, 255, 0.12);
     --glass-bg: rgba(21, 24, 29, 0.68);
     --glass-border: rgba(255, 255, 255, 0.08);
 
     --shadow-xl: 0 4px 10px rgba(0, 0, 0, 0.45), 0 28px 56px -14px rgba(0, 0, 0, 0.6);
 
+    /* True white, reserved for primary metrics that carry no clinical severity
+       of their own (the plain "Waiting" count, not an ESI number or a
+       status-tinted stat) — those keep their status-ink colour, because that
+       colour *is* the safety signal and stark white would erase it. */
+    --ink-stark: #ffffff;
+
     --glow-critical: 0 0 0 1px rgba(226, 99, 99, 0.32), 0 0 28px -4px rgba(226, 99, 99, 0.45);
     --glow-serious: 0 0 0 1px rgba(236, 131, 90, 0.26), 0 0 22px -6px rgba(236, 131, 90, 0.34);
     --glow-warning: 0 0 0 1px rgba(250, 178, 25, 0.22), 0 0 16px -6px rgba(250, 178, 25, 0.26);
-    --glow-accent: 0 0 0 1px rgba(91, 156, 240, 0.28), 0 0 24px -6px rgba(91, 156, 240, 0.4);
+    --glow-accent: 0 0 0 1px rgba(190, 99, 255, 0.3), 0 0 26px -6px rgba(255, 63, 176, 0.42);
 
     --grad-critical: linear-gradient(135deg, #ff8a8a, #ef4444);
     --grad-serious: linear-gradient(135deg, #ffab8a, #ec835a);
+
+    /* Dark takes a slightly stronger wash than light — the same glow reads
+       fainter against a dark surface. */
+    --ambient: radial-gradient(1300px 800px at 100% -8%, rgba(190, 99, 255, 0.13), transparent 65%),
+      radial-gradient(1200px 760px at -6% 106%, rgba(255, 63, 176, 0.09), transparent 62%);
   }
 }
 
@@ -229,29 +285,34 @@
   --wash-serious: rgba(236, 131, 90, 0.14);
   --wash-critical: rgba(208, 59, 59, 0.16);
 
-  --accent: #5b9cf0;
-  --accent-hover: #79aef4;
-  --accent-ink: #8dbaf6;
-  --accent-wash: rgba(91, 156, 240, 0.14);
+  --accent: #be63ff;
+  --accent-hover: #ff3fb0;
+  --accent-ink: #be63ff;
+  --accent-wash: rgba(190, 99, 255, 0.14);
   --accent-contrast: #0b1220;
 
   --scrollbar-thumb: rgba(255, 255, 255, 0.16);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
 
   --edge: rgba(255, 255, 255, 0.09);
-  --edge-strong: rgba(255, 255, 255, 0.14);
+  --edge-strong: rgba(255, 255, 255, 0.12);
   --glass-bg: rgba(21, 24, 29, 0.68);
   --glass-border: rgba(255, 255, 255, 0.08);
 
   --shadow-xl: 0 4px 10px rgba(0, 0, 0, 0.45), 0 28px 56px -14px rgba(0, 0, 0, 0.6);
 
+  --ink-stark: #ffffff;
+
   --glow-critical: 0 0 0 1px rgba(226, 99, 99, 0.32), 0 0 28px -4px rgba(226, 99, 99, 0.45);
   --glow-serious: 0 0 0 1px rgba(236, 131, 90, 0.26), 0 0 22px -6px rgba(236, 131, 90, 0.34);
   --glow-warning: 0 0 0 1px rgba(250, 178, 25, 0.22), 0 0 16px -6px rgba(250, 178, 25, 0.26);
-  --glow-accent: 0 0 0 1px rgba(91, 156, 240, 0.28), 0 0 24px -6px rgba(91, 156, 240, 0.4);
+  --glow-accent: 0 0 0 1px rgba(190, 99, 255, 0.3), 0 0 26px -6px rgba(255, 63, 176, 0.42);
 
   --grad-critical: linear-gradient(135deg, #ff8a8a, #ef4444);
   --grad-serious: linear-gradient(135deg, #ffab8a, #ec835a);
+
+  --ambient: radial-gradient(1300px 800px at 100% -8%, rgba(190, 99, 255, 0.13), transparent 65%),
+    radial-gradient(1200px 760px at -6% 106%, rgba(255, 63, 176, 0.09), transparent 62%);
 }
 
 * {
@@ -261,7 +322,9 @@
 body {
   margin: 0;
   font-family: var(--font);
-  background: var(--page);
+  background-color: var(--page);
+  background-image: var(--ambient);
+  background-attachment: fixed;
   color: var(--ink);
   font-size: var(--text-base);
   line-height: 1.5;
@@ -381,17 +444,41 @@ button {
   cursor: not-allowed;
 }
 
+/**
+ * The primary action — purple leading into magenta, matching the brief's
+ * naming order (135deg to stay consistent with the other two brand gradients,
+ * `--grad-critical`/`--grad-serious`, which both run the same diagonal).
+ *
+ * The trailing `>` is the same forward-motion glyph used everywhere else a
+ * transition or a next-step is implied in this app (ESI transitions, the
+ * empty-state prompt). On a button it doubles as the one place the motif gets
+ * to move: it nudges forward on hover and settles back on release, animating
+ * only the `transform`, so `prefers-reduced-motion` (already global on this
+ * page) suppresses it along with every other transition without special-casing.
+ */
 .btn--primary {
-  background: linear-gradient(160deg, var(--accent-hover), var(--accent));
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
   border-color: var(--accent);
   color: var(--accent-contrast);
   box-shadow: 0 1px 2px rgba(14, 17, 22, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 }
 
 .btn--primary:hover:not(:disabled) {
-  background: linear-gradient(160deg, var(--accent-hover), var(--accent-hover));
+  background: linear-gradient(135deg, var(--accent-hover), var(--accent-hover));
   border-color: var(--accent-hover);
   box-shadow: var(--glow-accent);
+}
+
+.btn--primary::after {
+  content: '>';
+  display: inline-block;
+  font-weight: 800;
+  transform: translateX(0);
+  transition: transform var(--dur) var(--ease);
+}
+
+.btn--primary:hover:not(:disabled)::after {
+  transform: translateX(3px);
 }
 
 .btn--ghost {

@@ -191,7 +191,8 @@
   display: block;
   height: 100%;
   border-radius: var(--radius-pill);
-  background: currentColor;
+  background: linear-gradient(90deg, color-mix(in srgb, currentColor 55%, transparent), currentColor);
+  transition: width var(--dur) var(--ease);
 }
 
 /* ------------------------------------------------------------ explain flags */

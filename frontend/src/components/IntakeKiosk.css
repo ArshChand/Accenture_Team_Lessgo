@@ -2,10 +2,10 @@
   max-width: 680px;
   margin: 0 auto;
   background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  padding: 20px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: var(--sp-5);
 }
 
 .kiosk__head h2 {
@@ -41,6 +41,18 @@
   border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--ink);
+  transform: scale(1);
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease),
+    box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease-spring);
+}
+
+.kiosk__lang:hover {
+  border-color: var(--ink-muted);
+  transform: translateY(-1px);
+}
+
+.kiosk__lang:active {
+  transform: scale(0.97);
 }
 
 .kiosk__lang strong {
@@ -56,6 +68,7 @@
   border-color: var(--accent);
   border-width: 2px;
   background: var(--accent-wash);
+  box-shadow: var(--glow-accent);
 }
 
 .kiosk__mic {
@@ -63,18 +76,29 @@
 }
 
 .kiosk__mic-btn {
-  padding: 14px 26px;
+  padding: 14px 28px;
   border-radius: var(--radius-pill);
-  border: 2px solid var(--accent);
-  background: var(--accent);
-  color: #fff;
+  border: 2px solid transparent;
+  background: linear-gradient(155deg, var(--accent), var(--accent-hover));
+  box-shadow: var(--glow-accent);
+  color: var(--accent-contrast);
   font-size: var(--text-lg);
   font-weight: 600;
+  transform: scale(1);
+  transition: transform var(--dur) var(--ease-spring), box-shadow var(--dur) var(--ease);
+}
+
+.kiosk__mic-btn:hover {
+  transform: translateY(-1px);
+}
+
+.kiosk__mic-btn:active {
+  transform: scale(0.97);
 }
 
 .kiosk__mic-btn.is-listening {
-  background: var(--status-critical);
-  border-color: var(--status-critical-ink);
+  background: linear-gradient(155deg, #ff8a8a, var(--status-critical));
+  box-shadow: var(--glow-critical);
   animation: pulse 1.4s ease-in-out infinite;
 }
 
@@ -122,12 +146,14 @@
   padding: 8px 10px;
   border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
-  background: var(--page);
+  background: var(--surface-sunken);
   color: var(--ink);
+  transition: border-color var(--dur-fast) var(--ease), transform var(--dur) var(--ease);
 }
 
 .kiosk__script:hover {
   border-color: var(--accent);
+  transform: translateX(2px);
 }
 
 .kiosk__script-text {
@@ -161,6 +187,7 @@
   background: var(--wash-critical);
   color: var(--status-critical-ink);
   font-size: var(--text-sm);
+  box-shadow: var(--glow-critical);
 }
 
 .kiosk__result {

@@ -3,9 +3,9 @@
    on the way back. The events are text, so they get a text column. */
 .audit {
   background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
   padding: var(--sp-4);
   width: 100%;
   max-width: 980px;
@@ -37,6 +37,9 @@
   border-left: 3px solid;
 }
 
+/* An intact chain is calm — a verified state has nothing to draw the eye toward.
+   A broken one gets the same glow as every other critical surface: it is,
+   after all, the worst thing this screen can report. */
 .audit__verdict--good {
   background: var(--wash-good);
   border-left-color: var(--status-good-ink);
@@ -46,6 +49,7 @@
   background: var(--wash-critical);
   border-left-color: var(--status-critical-ink);
   color: var(--status-critical-ink);
+  box-shadow: var(--glow-critical);
 }
 
 .audit__empty {
@@ -72,6 +76,12 @@
   border-left-width: 3px;
   border-left-color: var(--ink-muted);
   font-size: var(--text-sm);
+  transition: border-color var(--dur-fast) var(--ease), transform var(--dur) var(--ease);
+}
+
+.audit__event:hover {
+  border-color: var(--edge-strong);
+  transform: translateX(1px);
 }
 
 .audit__event--triage_override {
@@ -126,6 +136,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The ">" reads as both "greater than" and "became" — apt for a severity
+   transition, and consistent with the same glyph used everywhere else this
+   app implies forward motion. */
+.audit__chevron {
+  margin: 0 2px;
+  color: var(--accent-ink);
+  font-weight: 800;
+}
+
 .audit__dir {
   margin-left: 6px;
   padding: 1px 6px;
@@ -169,8 +188,14 @@
 }
 
 .audit__hash {
-  margin-top: 4px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  display: inline-block;
+  margin-top: var(--sp-2);
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  border: 1px solid var(--edge);
+  font-family: var(--font-mono);
   font-size: 10px;
+  letter-spacing: 0.01em;
   color: var(--ink-muted);
 }
