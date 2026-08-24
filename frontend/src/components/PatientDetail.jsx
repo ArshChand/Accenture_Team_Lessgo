@@ -37,15 +37,17 @@ const MODE_COPY = {
   start_fallback: 'START protocol fallback — degraded',
 };
 
-export function PatientDetail({ encounterId, onOverride, refreshToken }) {
+export function PatientDetail({ encounterId, onOverride, onResolved, clinicians = [], refreshToken }) {
   const [data, setData] = useState(null);
   const [identity, setIdentity] = useState(null);
   const [error, setError] = useState(null);
+  const [resolving, setResolving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setIdentity(null);
     setError(null);
+    setResolving(false);
     api
       .encounter(encounterId)
       .then((result) => !cancelled && setData(result))
@@ -200,9 +202,165 @@ export function PatientDetail({ encounterId, onOverride, refreshToken }) {
         </ol>
       </section>
 
-      <button type="button" className="btn btn--primary detail__override" onClick={() => onOverride(encounter, latest)}>
-        Review &amp; override severity
-      </button>
+      <div className="detail__actions">
+        <button
+          type="button"
+          className="btn btn--primary btn--block"
+          onClick={() => onOverride(encounter, latest)}
+        >
+          Review &amp; override severity
+        </button>
+
+        {resolving ? (
+          <ResolvePanel
+            encounter={encounter}
+            clinicians={clinicians}
+            onCancel={() => setResolving(false)}
+            onResolved={onResolved}
+          />
+        ) : (
+          <button type="button" className="btn btn--block" onClick={() => setResolving(true)}>
+            Resolve &amp; clear from queue
+          </button>
+        )}
+      </div>
     </aside>
+  );
+}
+
+const DISPOSITIONS = [
+  {
+    status: 'in_treatment',
+    label: 'Seen — taken into treatment',
+    detail: 'The patient is now being cared for. Removes them from the waiting board.',
+  },
+  {
+    status: 'discharged',
+    label: 'Discharged',
+    detail: 'Assessment complete and the patient has gone home.',
+  },
+  {
+    status: 'left_without_being_seen',
+    label: 'Left without being seen',
+    detail: 'The patient is no longer here. Always needs a note of what was attempted.',
+  },
+];
+
+const MIN_REASON = 20;
+
+/**
+ * Clearing a patient off the board.
+ *
+ * This is a confirmation step rather than a one-click row action, and that is
+ * deliberate. Removing an encounter stops the decay clock and takes the patient
+ * out of the re-triage loop, so a misclick does not just tidy the screen — it
+ * makes someone invisible to every safety mechanism behind it. The action is
+ * therefore reached from the detail panel, where the nurse is already looking at
+ * who they are about to clear.
+ *
+ * The reason requirement mirrors the override dialog: the client asks for what
+ * the server will demand, so the nurse is not surprised by a refusal — but the
+ * server is still the thing enforcing it.
+ */
+function ResolvePanel({ encounter, clinicians, onCancel, onResolved }) {
+  const [status, setStatus] = useState('in_treatment');
+  const [reasonText, setReasonText] = useState('');
+  const [clinicianId, setClinicianId] = useState(clinicians[0]?._id ?? '');
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  const isHighAcuity = (encounter.currentESI ?? 5) <= 2;
+  const reasonRequired =
+    status === 'left_without_being_seen' || (status === 'discharged' && isHighAcuity);
+  const reasonShort = reasonText.trim().length < MIN_REASON;
+  const blocked = !clinicianId || (reasonRequired && reasonShort);
+
+  const submit = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.disposition(String(encounter._id), { clinicianId, status, reasonText });
+      await onResolved?.();
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="resolve">
+      <h3 className="resolve__title">Clear {encounter.displayRef} from the queue</h3>
+
+      <div className="resolve__options" role="radiogroup" aria-label="Disposition">
+        {DISPOSITIONS.map((option) => (
+          <label
+            key={option.status}
+            className={`resolve__option ${status === option.status ? 'is-selected' : ''}`}
+          >
+            <input
+              type="radio"
+              name="disposition"
+              value={option.status}
+              checked={status === option.status}
+              onChange={() => setStatus(option.status)}
+            />
+            <span>
+              <span className="resolve__option-label">{option.label}</span>
+              <span className="resolve__option-detail">{option.detail}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+
+      {reasonRequired && (
+        <div className="resolve__reason">
+          <label htmlFor="resolve-reason">
+            {status === 'left_without_being_seen'
+              ? 'What was attempted before they left?'
+              : `Still scored ESI ${encounter.currentESI} — justify closing at this severity`}
+          </label>
+          <textarea
+            id="resolve-reason"
+            rows={3}
+            value={reasonText}
+            onChange={(e) => setReasonText(e.target.value)}
+            placeholder="Minimum 20 characters."
+          />
+          <span className={`resolve__counter ${reasonShort ? 'is-short' : ''}`}>
+            {reasonText.trim().length} / {MIN_REASON}
+          </span>
+        </div>
+      )}
+
+      <label className="resolve__field">
+        <span>Recorded by</span>
+        <select value={clinicianId} onChange={(e) => setClinicianId(e.target.value)}>
+          <option value="">Select clinician…</option>
+          {clinicians.map((c) => (
+            <option key={c._id} value={c._id}>
+              {c.name} · {c.registrationNumber}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {error && <p className="resolve__error">{error}</p>}
+
+      <div className="resolve__buttons">
+        <button type="button" className="btn btn--ghost btn--small" onClick={onCancel} disabled={busy}>
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="btn btn--danger btn--small"
+          onClick={submit}
+          disabled={blocked || busy}
+        >
+          {busy ? 'Clearing…' : 'Confirm & clear'}
+        </button>
+      </div>
+
+      <p className="resolve__note">Recorded as an audit event against the clinician above.</p>
+    </div>
   );
 }

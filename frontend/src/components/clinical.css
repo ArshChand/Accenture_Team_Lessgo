@@ -1,39 +1,66 @@
 /* ---------------------------------------------------------------- ESI badge */
 
+/**
+ * The badge is a number and a word in a bordered chip. The number is what a nurse
+ * scans for, so it leads and carries the weight; the word is what makes the badge
+ * survive a colourblind reader or a monochrome print of the board.
+ */
 .esi-badge {
   display: inline-flex;
   align-items: baseline;
-  gap: 6px;
-  padding: 3px 9px;
+  gap: var(--sp-2);
+  padding: 3px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   white-space: nowrap;
 }
 
 .esi-badge strong {
-  font-size: 15px;
+  font-size: var(--text-lg);
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+}
+
+.esi-badge--lg {
+  padding: var(--sp-2) var(--sp-3);
+  gap: var(--sp-3);
 }
 
 .esi-badge--lg strong {
-  font-size: 26px;
+  font-size: 28px;
 }
 
 .esi-badge__label {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--text-sm);
+  font-weight: 550;
 }
 
+/**
+ * ESI 1 and 2 get a gradient border and an ambient glow; 3 keeps a flat wash;
+ * 4/5 stay plain. The technique is a two-layer background — an opaque fill
+ * painted to the padding box, the gradient painted to the border box — rather
+ * than an actual `border-image`, so the badge keeps a real `border-radius`.
+ *
+ * The fill has to be opaque. The first attempt used the translucent wash as
+ * that fill, on the assumption it would sit inside the border ring with
+ * nothing behind it — but the border-box layer is not confined to the ring,
+ * it fills the whole box, and CSS paints background layers first-listed-on-top.
+ * At 16% alpha the wash barely occluded the gradient sitting under it, so the
+ * badge read as a solid saturated block rather than a tinted pill with a
+ * gradient edge. `--surface` as the fill is fully opaque and actually hides
+ * the gradient everywhere except the 1px ring it is meant to show through.
+ */
 .esi-badge--critical {
-  background: var(--wash-critical);
-  border-color: var(--status-critical);
-  color: var(--status-critical);
+  border: 1px solid transparent;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--grad-critical) border-box;
+  color: var(--status-critical-ink);
+  box-shadow: var(--glow-critical);
 }
 .esi-badge--serious {
-  background: var(--wash-serious);
-  border-color: var(--status-serious);
-  color: var(--ink);
+  border: 1px solid transparent;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--grad-serious) border-box;
+  color: var(--status-serious-ink);
+  box-shadow: var(--glow-serious);
 }
 .esi-badge--warning {
   background: var(--wash-warning);
@@ -46,45 +73,49 @@
   color: var(--ink);
 }
 .esi-badge--neutral {
-  background: var(--surface);
-  border-color: var(--hairline);
+  background: var(--surface-sunken);
+  border-color: var(--hairline-strong);
   color: var(--ink-secondary);
 }
 .esi-badge--unknown {
-  padding: 3px 9px;
+  display: inline-flex;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
   border: 1px dashed var(--ink-muted);
   color: var(--ink-muted);
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
-/* ------------------------------------------------------------ decay status */
+/* ------------------------------------------------------------- decay status */
 
 .decay {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--sp-2);
 }
 
 .decay__glyph {
-  font-size: 12px;
+  font-size: var(--text-sm);
   line-height: 1;
 }
 
 .decay__text {
   display: flex;
   flex-direction: column;
-  line-height: 1.25;
+  line-height: 1.3;
+  min-width: 0;
 }
 
 .decay__label {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--text-sm);
+  font-weight: 550;
+  white-space: nowrap;
 }
 
 .decay__ratio {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
+  white-space: nowrap;
 }
 
 .decay--good .decay__glyph {
@@ -93,30 +124,36 @@
 .decay--warning .decay__glyph {
   color: var(--status-warning);
 }
+.decay--warning .decay__label {
+  color: var(--status-warning-ink);
+}
 .decay--critical .decay__glyph {
   color: var(--status-critical);
+  text-shadow: 0 0 8px rgba(208, 59, 59, 0.55);
 }
 .decay--critical .decay__label {
-  color: var(--status-critical);
-  font-weight: 600;
+  color: var(--status-critical-ink);
+  font-weight: 620;
 }
 
-/* ---------------------------------------------------------------- confidence */
+/* --------------------------------------------------------------- confidence */
 
 .confidence {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--hairline);
+  gap: var(--sp-2);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline-strong);
   background: var(--surface);
-  font-size: 12px;
+  font-size: var(--text-sm);
   white-space: nowrap;
+  color: var(--ink-secondary);
 }
 
 .confidence__score {
-  font-weight: 600;
+  font-weight: 620;
+  color: var(--ink);
 }
 
 .confidence--good {
@@ -128,20 +165,24 @@
 .confidence--critical {
   border-color: var(--status-critical);
   background: var(--wash-critical);
-  color: var(--status-critical);
-  font-weight: 600;
+  color: var(--status-critical-ink);
+  font-weight: 550;
+  box-shadow: var(--glow-critical);
+}
+.confidence--critical .confidence__score {
+  color: var(--status-critical-ink);
 }
 .confidence--missing {
   border-style: dashed;
   border-color: var(--status-critical);
-  color: var(--status-critical);
+  color: var(--status-critical-ink);
 }
 
 .confidence__bar {
   display: block;
   width: 54px;
   height: 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-pill);
   background: var(--hairline);
   overflow: hidden;
 }
@@ -149,11 +190,12 @@
 .confidence__bar-fill {
   display: block;
   height: 100%;
-  border-radius: 2px;
-  background: currentColor;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, color-mix(in srgb, currentColor 55%, transparent), currentColor);
+  transition: width var(--dur) var(--ease);
 }
 
-/* -------------------------------------------------------------- explain flags */
+/* ------------------------------------------------------------ explain flags */
 
 .explain-list {
   list-style: none;
@@ -161,87 +203,92 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: var(--sp-2);
 }
 
 .explain {
-  padding: 8px 10px;
+  padding: var(--sp-2) var(--sp-3);
   border-radius: var(--radius-sm);
   border: 1px solid var(--hairline);
   border-left-width: 3px;
   background: var(--surface);
+  transition: box-shadow var(--dur) var(--ease);
 }
 
 .explain--critical {
   border-left-color: var(--status-critical);
   background: var(--wash-critical);
+  box-shadow: var(--glow-critical);
 }
 .explain--warning {
   border-left-color: var(--status-warning);
   background: var(--wash-warning);
 }
 .explain--neutral {
-  border-left-color: var(--ink-muted);
+  border-left-color: var(--hairline-strong);
 }
 .explain--more {
   border-left-color: transparent;
   color: var(--ink-muted);
-  font-size: 12px;
+  font-size: var(--text-sm);
   text-align: center;
 }
 
 .explain__head {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
 .explain__label {
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: 620;
+  font-size: var(--text-base);
 }
 
 .explain__source {
   margin-left: auto;
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .explain__pill {
   font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 1px 6px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
+  letter-spacing: 0.05em;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline-strong);
   color: var(--ink-secondary);
 }
 
 .explain__pill--hard {
   border-color: var(--status-critical);
-  color: var(--status-critical);
-  font-weight: 600;
+  color: var(--status-critical-ink);
+  background: var(--surface);
 }
 
 .explain__evidence {
-  margin-top: 3px;
-  font-size: 12px;
+  margin-top: var(--sp-1);
+  font-size: var(--text-sm);
   color: var(--ink-secondary);
   font-variant-numeric: tabular-nums;
+  line-height: 1.5;
 }
 
 .explain__rationale {
-  margin-top: 4px;
-  font-size: 12px;
+  margin-top: var(--sp-1);
+  font-size: var(--text-sm);
   color: var(--ink-muted);
-  font-style: italic;
+  line-height: 1.5;
 }
 
 .explain-empty {
   margin: 0;
   color: var(--ink-muted);
-  font-size: 13px;
+  font-size: var(--text-base);
 }

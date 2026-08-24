@@ -2,7 +2,13 @@ import { Router } from 'express';
 import { repositories } from '../db/index.js';
 import { ENCOUNTER_STATUS, OVERRIDE_REASONS, TRIAGE_TRIGGER, resolveAgeBand } from '../clinical/constants.js';
 import { getActiveProtocol } from '../services/protocolService.js';
-import { applyOverride, scoreAndPersist } from '../services/triageService.js';
+import {
+  CLEARING_STATUSES,
+  DISPOSITION_MIN_REASON_LENGTH,
+  applyDisposition,
+  applyOverride,
+  scoreAndPersist,
+} from '../services/triageService.js';
 import { extractSymptoms, fetchModelInfo } from '../services/mlClient.js';
 import { recordPhiAccess, verifyAuditChain } from '../services/auditService.js';
 import { safeWaitMinutesWith } from '../clinical/protocol.js';
@@ -242,6 +248,56 @@ export function triageRoutes() {
         encounter: result.encounter,
         previousESI: result.previousESI,
         newESI: result.newESI,
+        auditSeq: result.auditEvent.seq,
+        auditHash: result.auditEvent.hash,
+      });
+    }),
+  );
+
+  // ----------------------------------------------------------- disposition
+
+  /**
+   * Clearing a patient off the active queue.
+   *
+   * Deliberately not a PATCH on the encounter: a generic field-update endpoint
+   * would let a caller change `status` without the audit event and the reason
+   * check that belong to it. Disposition is its own named act.
+   */
+  router.get('/disposition/options', (req, res) => {
+    res.json({
+      statuses: CLEARING_STATUSES,
+      friction: {
+        [ENCOUNTER_STATUS.IN_TREATMENT]: { reasonTextRequired: false },
+        [ENCOUNTER_STATUS.DISCHARGED]: {
+          reasonTextRequired: 'when_high_acuity',
+          minReasonLength: DISPOSITION_MIN_REASON_LENGTH,
+          note: 'Required when the assistant still scores the patient ESI 1 or 2.',
+        },
+        [ENCOUNTER_STATUS.LEFT_WITHOUT_BEING_SEEN]: {
+          reasonTextRequired: true,
+          minReasonLength: DISPOSITION_MIN_REASON_LENGTH,
+        },
+      },
+    });
+  });
+
+  router.post(
+    '/encounters/:id/disposition',
+    asyncRoute(async (req, res) => {
+      const { clinicianId, status, reasonText } = req.body ?? {};
+
+      const result = await applyDisposition({
+        encounterId: req.params.id,
+        clinicianId,
+        status,
+        reasonText,
+        session: sessionFrom(req),
+      });
+
+      return res.json({
+        encounter: result.encounter,
+        status: result.encounter.status,
+        waitedMinutes: result.waitedMinutes,
         auditSeq: result.auditEvent.seq,
         auditHash: result.auditEvent.hash,
       });

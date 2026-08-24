@@ -2,13 +2,18 @@ import { formatWait } from './clinical.jsx';
 import './StatusBar.css';
 
 /**
- * Department-level state: the stat row, the surge banner, and the transport
+ * Department-level state: the surge banner, the stat row, and the transport
  * indicator.
  *
  * These are stat tiles rather than charts on purpose. Each number answers a
  * single question a charge nurse asks between patients — how many are waiting,
  * how far behind are we, is the department surging — and a hero number answers
  * that faster than any plot of it would.
+ *
+ * The tiles carry status colour only when the number is actionable. A zero in
+ * "safe wait exceeded" is good news and gets no colour at all: if every tile is
+ * always tinted, the tint stops meaning anything, and the one tile that has gone
+ * critical no longer stands out from the five that are merely reporting.
  */
 
 const TRANSPORT_COPY = {
@@ -30,53 +35,74 @@ export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, l
     <div className="statusbar">
       {surge.active && (
         <div className="surge" role="status">
-          <span className="surge__tag">SURGE</span>
+          <span className="surge__tag">Surge</span>
           <div className="surge__body">
-            <strong>Department is surging.</strong>{' '}
-            {surge.metrics && (
-              <>
-                {surge.metrics.arrivalsPerHour}/hr against a baseline of {surge.metrics.baselineArrivalsPerHour} (
-                {surge.metrics.multiple}×), {surge.metrics.queuePerNurse} waiting per nurse.
-              </>
-            )}
-            <div className="surge__policy">
-              Escalating on less uncertainty · ESI 3 split into 3A/3B · low-acuity re-checked more often ·{' '}
-              <strong>safe waiting times unchanged</strong>
-            </div>
+            <p className="surge__lead">
+              <strong>Department is surging.</strong>{' '}
+              {surge.metrics && (
+                <span className="surge__metrics">
+                  {surge.metrics.arrivalsPerHour}/hr against a baseline of{' '}
+                  {surge.metrics.baselineArrivalsPerHour} ({surge.metrics.multiple}×) ·{' '}
+                  {surge.metrics.queuePerNurse} waiting per nurse
+                </span>
+              )}
+            </p>
+            <ul className="surge__policy">
+              <li>Escalating on less uncertainty</li>
+              <li>ESI 3 split into 3A / 3B</li>
+              <li>Low-acuity re-checked more often</li>
+              <li className="surge__policy-hold">Safe waiting times unchanged</li>
+            </ul>
           </div>
         </div>
       )}
 
       <div className="stats">
-        <Stat label="Waiting" value={waiting} />
+        <Stat label="Waiting" value={waiting} hint="Currently on the board" />
+        {/*
+          The bento grid's one adaptive cell: this tile grows and takes the glow
+          only once there is something in it to be urgent about. A dashboard that
+          is always dramatic stops reading as dramatic — the emphasis has to be
+          earned by the number, not applied by the layout.
+        */}
         <Stat
           label="Safe wait exceeded"
           value={breached}
-          status={breached > 0 ? 'critical' : 'good'}
+          status={breached > 0 ? 'critical' : 'neutral'}
+          hero={breached > 0}
           hint={breached > 0 ? 'Needs attention now' : 'All within limits'}
         />
         <Stat
           label="Approaching limit"
           value={approaching}
-          status={approaching > 0 ? 'warning' : 'good'}
+          status={approaching > 0 ? 'warning' : 'neutral'}
+          hint={approaching > 0 ? 'Past 60% of safe wait' : 'None near a limit'}
         />
-        <Stat label="High acuity (ESI 1–2)" value={highAcuity} status={highAcuity > 0 ? 'serious' : 'good'} />
+        <Stat
+          label="High acuity"
+          value={highAcuity}
+          status={highAcuity > 0 ? 'serious' : 'neutral'}
+          hint="ESI 1–2"
+        />
         <Stat
           label="Low confidence"
           value={lowConfidence}
-          status={lowConfidence > 0 ? 'warning' : 'good'}
-          hint="Assistant is unsure — already escalated"
+          status={lowConfidence > 0 ? 'warning' : 'neutral'}
+          hint="Assistant unsure — already escalated"
         />
         <Stat
           label="Capacity debt"
           value={formatWait(capacityDebtMinutes)}
-          status={capacityDebtMinutes > 0 ? 'warning' : 'good'}
-          hint="Total minutes owed past safe waits"
+          status={capacityDebtMinutes > 0 ? 'warning' : 'neutral'}
+          hint="Minutes owed past safe waits"
         />
 
         <div className={`stat stat--conn stat--${conn.status}`}>
           <div className="stat__label">Connection</div>
-          <div className="stat__value stat__value--sm">{conn.label}</div>
+          <div className="stat__value stat__value--sm">
+            <span className={`stat__pulse stat__pulse--${conn.status}`} aria-hidden="true" />
+            {conn.label}
+          </div>
           <div className="stat__hint">
             {conn.detail}
             {lastUpdateAt && ` · ${new Date(lastUpdateAt).toLocaleTimeString()}`}
@@ -87,11 +113,16 @@ export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, l
   );
 }
 
-function Stat({ label, value, status = 'neutral', hint }) {
+/**
+ * `value` deliberately does not use tabular figures: at 30px, tabular gives every
+ * digit the width of a zero and a number like 24 reads loose and misaligned with
+ * its own label.
+ */
+function Stat({ label, value, status = 'neutral', hint, hero = false }) {
   return (
-    <div className={`stat stat--${status}`}>
+    <div className={`stat stat--${status} ${hero ? 'stat--hero' : ''}`}>
       <div className="stat__label">{label}</div>
-      <div className="stat__value tabular">{value}</div>
+      <div className="stat__value">{value}</div>
       {hint && <div className="stat__hint">{hint}</div>}
     </div>
   );

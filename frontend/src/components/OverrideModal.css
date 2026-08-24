@@ -1,35 +1,46 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(11, 11, 11, 0.45);
+  background: rgba(8, 10, 14, 0.6);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 5vh 16px;
+  padding: 5vh var(--sp-4);
   overflow-y: auto;
   z-index: 100;
 }
 
 .modal {
   background: var(--surface-raised);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .modal {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  }
 }
 
 .modal__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: var(--sp-4) var(--sp-5);
   border-bottom: 1px solid var(--hairline);
 }
 
 .modal__head h2 {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--text-lg);
+  font-weight: 620;
+  letter-spacing: -0.012em;
 }
 
 .modal__close {
@@ -38,21 +49,27 @@
   font-size: 22px;
   line-height: 1;
   color: var(--ink-muted);
-  padding: 0 4px;
+  padding: 0 var(--sp-1);
+  border-radius: var(--radius-sm);
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.modal__close:hover {
+  color: var(--ink);
 }
 
 .modal__body {
-  padding: 16px;
+  padding: var(--sp-5);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--sp-4);
 }
 
 .modal__foot {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  padding-top: 4px;
+  gap: var(--sp-2);
+  padding-top: var(--sp-1);
 }
 
 /* ------------------------------------------------------------------ override */
@@ -60,20 +77,21 @@
 .override__current {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-3);
   flex-wrap: wrap;
-  padding: 10px;
+  padding: var(--sp-3);
   border-radius: var(--radius-sm);
-  background: var(--page);
+  background: var(--surface-sunken);
+  border: 1px solid var(--hairline);
 }
 
 .override__current-label {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--ink-muted);
 }
 
 .override__conf {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--ink-secondary);
 }
 
@@ -84,7 +102,7 @@
 }
 
 .override__levels legend {
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -95,7 +113,7 @@
 .override__level-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 .override__level {
@@ -103,12 +121,19 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 8px 4px;
-  border: 1px solid var(--hairline);
+  padding: var(--sp-2) var(--sp-1);
+  border: 1px solid var(--hairline-strong);
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: center;
   background: var(--surface);
+  transform: scale(1);
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease),
+    box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease-spring);
+}
+
+.override__level:active {
+  transform: scale(0.95);
 }
 
 .override__level input {
@@ -119,7 +144,8 @@
 }
 
 .override__level strong {
-  font-size: 18px;
+  font-size: var(--text-xl);
+  font-weight: 650;
 }
 
 .override__level span {
@@ -136,23 +162,27 @@
   border-color: var(--accent);
   border-width: 2px;
   background: var(--accent-wash);
+  box-shadow: var(--glow-accent);
 }
 
 .override__level.is-active.is-escalation {
   border-color: var(--status-critical);
   background: var(--wash-critical);
+  box-shadow: var(--glow-critical);
 }
 
 .override__level.is-active.is-deescalation {
   border-color: var(--status-warning);
   background: var(--wash-warning);
+  box-shadow: var(--glow-warning);
 }
 
 .override__notice {
   margin: 0;
-  padding: 9px 11px;
+  padding: var(--sp-2) var(--sp-3);
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-size: var(--text-sm);
+  line-height: 1.5;
   border-left: 3px solid;
 }
 
@@ -175,7 +205,7 @@
 }
 
 .field__label {
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -183,7 +213,7 @@
 }
 
 .field__hint {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
 }
 
@@ -192,9 +222,9 @@
 .field input[type='text'],
 .field input[type='number'] {
   font-family: inherit;
-  font-size: 13px;
-  padding: 7px 9px;
-  border: 1px solid var(--hairline);
+  font-size: var(--text-md);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--hairline-strong);
   border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--ink);
@@ -208,13 +238,13 @@
 .attest {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 10px;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
   border: 1px solid var(--status-warning);
   border-radius: var(--radius-sm);
   background: var(--wash-warning);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--text-md);
+  font-weight: 550;
   cursor: pointer;
 }
 
@@ -224,8 +254,8 @@
 
 .override__blockers {
   margin: 0;
-  padding-left: 18px;
-  font-size: 12px;
+  padding-left: var(--sp-4);
+  font-size: var(--text-sm);
   color: var(--ink-secondary);
 }
 
@@ -235,46 +265,36 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--status-critical);
   background: var(--wash-critical);
-  color: var(--status-critical);
-  font-size: 12px;
+  color: var(--status-critical-ink);
+  font-size: var(--text-sm);
+  line-height: 1.5;
 }
 
 .override__audit-note {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
   border-top: 1px solid var(--hairline);
   padding-top: 10px;
 }
 
 /* ------------------------------------------------------------------- buttons */
+/* Base button styles live in theme.css; only the modal's own variant is here. */
 
-.btn {
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--hairline);
-  background: var(--surface);
-  color: var(--ink);
-  font-weight: 500;
-}
-
-.btn:hover:not(:disabled) {
-  border-color: var(--accent);
-}
-
-.btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btn--primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
+/**
+ * De-escalation. Filled in the warning role rather than the accent, so the
+ * button that lowers a patient's priority never looks like the default action.
+ * Dark ink on the fill — the warning step is light, and white on it fails
+ * contrast in both modes.
+ */
 .btn--caution {
   background: var(--status-warning);
   border-color: var(--status-warning);
-  color: #0b0b0b;
+  color: #2a1d00;
+}
+
+.btn--caution:hover:not(:disabled) {
+  background: #e3a015;
+  border-color: #e3a015;
+  color: #2a1d00;
 }

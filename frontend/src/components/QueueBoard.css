@@ -1,65 +1,186 @@
 .board {
   background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Fills the board column so the list scrolls rather than the page. */
+  flex: 1 1 auto;
   overflow: hidden;
 }
 
 .board--empty {
-  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-8) var(--sp-5);
   text-align: center;
   color: var(--ink-muted);
+  flex: 0 0 auto;
 }
 
-.board--empty p {
-  margin: 0 0 4px;
+.board--empty::before {
+  content: '✓';
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--wash-good);
+  border: 1px solid color-mix(in srgb, var(--status-good) 35%, var(--edge));
+  color: var(--status-good-ink);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.board__empty-title {
+  margin: 0 0 var(--sp-1);
+  font-size: var(--text-md);
+  font-weight: 550;
+  color: var(--ink-secondary);
 }
 
 .board__hint {
-  font-size: 12px;
+  margin: 0;
+  font-size: var(--text-base);
+}
+
+/* ---------------------------------------------------------------- board head */
+
+.board__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--hairline);
+  flex: 0 0 auto;
+}
+
+.board__title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 620;
+  letter-spacing: -0.01em;
+}
+
+.board__count {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-secondary);
+  background: var(--surface-sunken);
+  border-radius: var(--radius-pill);
+  padding: 2px 9px;
+}
+
+.board__count-of {
+  font-weight: 500;
+  color: var(--ink-muted);
 }
 
 .board__mode {
-  margin: 0;
-  padding: 8px 14px;
-  background: var(--wash-serious);
-  border-bottom: 1px solid var(--hairline);
-  font-size: 12px;
-  font-weight: 500;
+  margin: 0 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  text-align: right;
+}
+
+.board__mode-tag {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #2a1206;
+  background: linear-gradient(155deg, #f39a76, var(--status-serious));
+  border-radius: var(--radius-sm);
+  padding: 1px 8px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18) inset;
+}
+
+/* ------------------------------------------------------------ scrolling list */
+
+.board__scroll {
+  overflow-y: auto;
+  overflow-x: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .board__table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
-.board__table th {
+/* The header travels with the scroll so the columns stay named at any depth.
+   Frosted rather than a flat fill, so rows visibly pass underneath it — the
+   layered read a sticky header is supposed to give. */
+.board__table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   text-align: left;
-  padding: 9px 14px;
-  font-size: 11px;
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.055em;
   color: var(--ink-muted);
+  background: var(--surface-sunken);
   border-bottom: 1px solid var(--hairline);
-  background: var(--page);
+  white-space: nowrap;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .board__table thead th {
+    background: color-mix(in srgb, var(--surface-sunken) 82%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
 }
 
 .board__table td {
-  padding: 10px 14px;
+  padding: var(--sp-3) var(--sp-4);
   border-bottom: 1px solid var(--hairline);
   vertical-align: middle;
 }
 
-.board__row {
-  cursor: pointer;
-  /* The row wash is a secondary cue only; the badge and the decay label carry
-     the actual signal, so the board stays readable without colour. */
-  border-left: 3px solid transparent;
+.board__table tbody tr:last-child td {
+  border-bottom: none;
 }
 
+/**
+ * Row emphasis.
+ *
+ * The left rail carries the decay state, not a full-row wash. When most of the
+ * department is past its safe wait — which is exactly the situation this board
+ * exists for — washing every row red paints the whole screen one colour and the
+ * ranking stops being visible. A 3px rail keeps the state legible per row while
+ * leaving the surface calm enough to read the ordering off.
+ */
+.board__row {
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), box-shadow var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+
+.board__row > td:first-child {
+  position: relative;
+  box-shadow: inset 3px 0 0 transparent;
+}
+
+/* The hover lift is a hairline transform, not a translateX that would misalign
+   a row against the sticky header's columns — just enough to read as "this row
+   responded to you". */
 .board__row:hover {
   background: var(--accent-wash);
+  transform: scale(1.002);
 }
 
 .board__row:focus-visible {
@@ -67,31 +188,64 @@
   outline-offset: -2px;
 }
 
+.board__row--amber > td:first-child {
+  box-shadow: inset 3px 0 0 var(--status-warning);
+}
+
+.board__row--red > td:first-child {
+  box-shadow: inset 3px 0 0 var(--status-critical), 4px 0 12px -4px rgba(208, 59, 59, 0.5);
+}
+
+/* Deliberately no row-level wash for the breached state. In a department where
+   most of the queue is past its safe wait — the case this board is built for —
+   a red tint per row paints the whole surface one colour and the ranking stops
+   being readable. The rail carries a soft glow instead of a flat fill: enough
+   to separate a breached row from its neighbours on a glance down the column,
+   without repainting the row itself. */
+
 .board__row.is-selected {
   background: var(--accent-wash);
-  border-left-color: var(--accent);
 }
 
-.board__row--amber {
-  background: var(--wash-warning);
+.board__row.is-selected > td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent), 4px 0 14px -4px rgba(161, 0, 255, 0.4);
 }
-.board__row--red {
-  background: var(--wash-critical);
-}
+
+/* --------------------------------------------------------------- row content */
 
 .board__ref {
-  font-weight: 600;
+  font-weight: 620;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
 }
 
 .board__complaint {
-  font-size: 12px;
+  font-size: var(--text-base);
   color: var(--ink-secondary);
+  margin-top: 1px;
+  /* Long free-text complaints must not stretch the column; the detail panel
+     shows the whole thing. */
+  max-width: 34ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .board__age {
-  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-xs);
   color: var(--ink-muted);
+  margin-top: 3px;
+}
+
+.board__dot {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
 }
 
 /* Only the band name is capitalised — capitalising the whole line turns
@@ -101,22 +255,30 @@
 }
 
 .board__suggestion {
-  margin-top: 4px;
-  font-size: 11px;
+  margin-top: var(--sp-1);
+  font-size: var(--text-xs);
   color: var(--ink-muted);
-  font-style: italic;
+}
+
+.board__wait {
+  font-weight: 550;
+  white-space: nowrap;
 }
 
 .board__by {
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--hairline);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline-strong);
+  color: var(--ink-secondary);
+  white-space: nowrap;
 }
 
 .board__by--nurse {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-ink);
+  background: var(--accent-wash);
   font-weight: 600;
 }
 
@@ -132,13 +294,24 @@
     width: 100%;
   }
   .board__table tr {
-    padding: 6px 0;
+    padding: var(--sp-2) 0;
+    border-bottom: 1px solid var(--hairline);
   }
   .board__table td {
     border-bottom: none;
-    padding: 4px 14px;
+    padding: 3px var(--sp-4);
   }
-  .board__row {
-    border-bottom: 1px solid var(--hairline);
+  .board__row > td:first-child {
+    box-shadow: none;
+  }
+  .board__row--red {
+    border-left: 3px solid var(--status-critical);
+  }
+  .board__row--amber {
+    border-left: 3px solid var(--status-warning);
+  }
+  .board__complaint {
+    max-width: none;
+    white-space: normal;
   }
 }

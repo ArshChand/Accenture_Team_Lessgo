@@ -2,96 +2,168 @@
   background: var(--surface);
   border: 1px solid var(--hairline);
   border-radius: var(--radius);
-  padding: 14px;
+  box-shadow: var(--shadow-sm);
+  flex: 0 0 auto;
+  overflow: hidden;
 }
 
-.vitals h3 {
-  margin: 0;
-  font-size: 11px;
+/* ------------------------------------------------------------------ summary */
+
+.vitals__summary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.vitals__summary::-webkit-details-marker {
+  display: none;
+}
+
+.vitals__summary:hover {
+  background: var(--surface-sunken);
+}
+
+/* A disclosure caret drawn from a border, so it needs no icon asset and rotates
+   with the open state. */
+.vitals__summary::before {
+  content: '';
+  width: 0;
+  height: 0;
+  flex: 0 0 auto;
+  align-self: center;
+  border-left: 5px solid var(--ink-muted);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform var(--dur) var(--ease);
+}
+
+.vitals[open] > .vitals__summary::before {
+  transform: rotate(90deg);
+}
+
+.vitals[open] > .vitals__summary {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.vitals__summary-title {
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  color: var(--ink-secondary);
+}
+
+.vitals__summary-hint {
+  font-size: var(--text-sm);
   color: var(--ink-muted);
 }
 
+/* --------------------------------------------------------------------- form */
+
+.vitals__form {
+  padding: var(--sp-4);
+}
+
 .vitals__note {
-  margin: 4px 0 12px;
-  font-size: 12px;
+  margin: 0 0 var(--sp-3);
+  font-size: var(--text-sm);
   color: var(--ink-muted);
 }
 
 .vitals__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .vitals__field {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: 12px;
+  font-size: var(--text-sm);
+  font-weight: 550;
 }
 
 .vitals__field em {
   color: var(--ink-muted);
   font-style: normal;
-  font-size: 11px;
+  font-weight: 400;
+  font-size: var(--text-xs);
 }
 
 .vitals__field input {
   font-family: inherit;
-  font-size: 13px;
-  padding: 6px 8px;
-  border: 1px solid var(--hairline);
+  font-size: var(--text-md);
+  font-weight: 400;
+  padding: 7px var(--sp-2);
+  border: 1px solid var(--hairline-strong);
   border-radius: var(--radius-sm);
-  background: var(--surface-raised);
+  background: var(--surface-sunken);
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.vitals__field input:focus {
+  border-color: var(--accent);
 }
 
 .vitals__cues {
-  margin: 12px 0 0;
-  padding: 10px;
+  margin: var(--sp-3) 0 0;
+  padding: var(--sp-3);
   border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 .vitals__cues legend {
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--ink-muted);
-  padding: 0 4px;
+  padding: 0 var(--sp-1);
 }
 
 .vitals__cue {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 9px;
-  border: 1px solid var(--hairline);
-  border-radius: 999px;
-  font-size: 12px;
+  gap: var(--sp-2);
+  padding: 5px 11px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
   cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+
+.vitals__cue:hover {
+  border-color: var(--ink-muted);
+}
+
+.vitals__cue input {
+  accent-color: var(--accent);
 }
 
 .vitals__cue.is-on {
   border-color: var(--accent);
   background: var(--accent-wash);
-  font-weight: 500;
+  font-weight: 550;
 }
 
 .vitals__error {
-  margin: 10px 0 0;
-  font-size: 12px;
-  color: var(--status-critical);
+  margin: var(--sp-3) 0 0;
+  font-size: var(--text-sm);
+  color: var(--status-critical-ink);
 }
 
-.vitals button {
-  margin-top: 12px;
+.vitals__form button {
+  margin-top: var(--sp-3);
 }

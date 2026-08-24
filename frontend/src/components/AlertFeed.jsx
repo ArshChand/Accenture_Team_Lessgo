@@ -52,7 +52,8 @@ export function AlertFeed({ alerts, onSelect, onDismiss }) {
                   {alert.kind === 'deterioration' && (
                     <>
                       {' '}
-                      · ESI {alert.fromESI} → {alert.toESI} after {alert.minutesWaiting}m
+                      · ESI {alert.fromESI} <span className="alert__chevron">&gt;</span> {alert.toESI} after{' '}
+                      {alert.minutesWaiting}m
                     </>
                   )}
                 </span>

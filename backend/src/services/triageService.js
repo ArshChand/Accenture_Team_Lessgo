@@ -8,7 +8,7 @@ import { evaluateStartProtocol } from '../clinical/start.js';
 import { safeWaitMinutesWith } from '../clinical/protocol.js';
 import { getActiveProtocol } from './protocolService.js';
 import { buildScoringSnapshot, scoreEncounter } from './mlClient.js';
-import { recordOverride, recordTriageAssigned } from './auditService.js';
+import { recordOverride, recordStatusChange, recordTriageAssigned } from './auditService.js';
 import { canonicalJSON } from './auditService.js';
 
 /**
@@ -313,6 +313,95 @@ export async function dryRunScore(args) {
 }
 
 export const WAITING_STATUSES = [ENCOUNTER_STATUS.WAITING, ENCOUNTER_STATUS.IN_TRIAGE];
+
+/**
+ * Dispositions that take a patient off the active board. Anything not listed here
+ * keeps them in the queue and under the decay clock.
+ */
+export const CLEARING_STATUSES = [
+  ENCOUNTER_STATUS.IN_TREATMENT,
+  ENCOUNTER_STATUS.DISCHARGED,
+  ENCOUNTER_STATUS.LEFT_WITHOUT_BEING_SEEN,
+];
+
+/** Matches the de-escalation bar in the audit service — same act, same weight. */
+export const DISPOSITION_MIN_REASON_LENGTH = 20;
+
+/**
+ * Clearing a patient from the active queue.
+ *
+ * Same shape as `applyOverride` and for the same reason: the audit event is
+ * written first, so there is no state where a patient vanished from the board and
+ * no record says who removed them. Both are clinical acts, not housekeeping.
+ *
+ * The friction is asymmetric in the same direction as everything else in this
+ * system. Taking a patient into treatment is the safe disposition and needs
+ * nothing beyond an identified clinician. Discharging someone the assistant still
+ * scores ESI 1–2, or recording them as having left without being seen, is the
+ * dangerous one — those close the encounter on a patient the system believes is
+ * seriously unwell — so they require a written reason. That check lives here
+ * rather than in the dialog: a rule enforced only in the UI is bypassed by
+ * anything that can reach the API.
+ */
+export async function applyDisposition({ encounterId, clinicianId, status, reasonText, session = {} }) {
+  if (!CLEARING_STATUSES.includes(status)) {
+    const error = new Error(
+      `A disposition must be one of: ${CLEARING_STATUSES.join(', ')}. Received "${status}".`,
+    );
+    error.status = 400;
+    throw error;
+  }
+
+  const encounter = await repositories.encounters.findById(encounterId);
+  if (!encounter) throw notFound('Encounter not found');
+
+  const clinician = await repositories.clinicians.findById(clinicianId);
+  if (!clinician) throw notFound('Clinician not found');
+
+  if (!WAITING_STATUSES.includes(encounter.status)) {
+    const error = new Error(`${encounter.displayRef} has already left the queue (${encounter.status}).`);
+    error.status = 409;
+    throw error;
+  }
+
+  const isHighAcuity = (encounter.currentESI ?? 5) <= 2;
+  const needsReason =
+    status === ENCOUNTER_STATUS.LEFT_WITHOUT_BEING_SEEN ||
+    (status === ENCOUNTER_STATUS.DISCHARGED && isHighAcuity);
+
+  if (needsReason && (reasonText ?? '').trim().length < DISPOSITION_MIN_REASON_LENGTH) {
+    const error = new Error(
+      status === ENCOUNTER_STATUS.LEFT_WITHOUT_BEING_SEEN
+        ? `Recording a patient as having left without being seen needs at least ${DISPOSITION_MIN_REASON_LENGTH} characters explaining what was attempted.`
+        : `${encounter.displayRef} is still scored ESI ${encounter.currentESI}. Discharging at this severity needs at least ${DISPOSITION_MIN_REASON_LENGTH} characters of justification.`,
+    );
+    error.status = 400;
+    throw error;
+  }
+
+  const waitedMinutes =
+    (Date.now() - new Date(encounter.queue?.lastInformedAt ?? encounter.arrivalAt).getTime()) / 60000;
+
+  // Audit first. If this throws, the patient stays on the board.
+  const auditEvent = await recordStatusChange({
+    clinician,
+    encounter,
+    fromStatus: encounter.status,
+    toStatus: status,
+    reasonText,
+    waitedMinutes,
+    session,
+  });
+
+  const now = new Date();
+  const updated = await repositories.encounters.updateById(encounter._id, {
+    status,
+    statusChangedAt: now,
+    'queue.lastReassessedAt': now,
+  });
+
+  return { encounter: updated, auditEvent, waitedMinutes: Math.round(waitedMinutes) };
+}
 
 function notFound(message) {
   const error = new Error(message);

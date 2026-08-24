@@ -82,7 +82,7 @@ export function AuditViewer({ encounterRef, refreshToken }) {
 
               {event.before?.esi != null && event.after?.esi != null && (
                 <div className="audit__change">
-                  ESI {event.before.esi} → {event.after.esi}
+                  ESI {event.before.esi} <span className="audit__chevron">&gt;</span> {event.after.esi}
                   {event.after.direction && (
                     <span className={`audit__dir audit__dir--${event.after.direction}`}>
                       {event.after.direction === 'escalation' ? 'escalated' : 'de-escalated'}

@@ -61,12 +61,26 @@ export default function App() {
     setSelectedId(encounterId);
   };
 
+  // A resolved patient leaves the board, so the selection has to go with them —
+  // otherwise the detail panel keeps showing an encounter that is no longer in
+  // the queue, which reads as though the action failed.
+  const handleResolved = useCallback(async () => {
+    setSelectedId(null);
+    await queue.refresh();
+    bumpRefresh();
+  }, [queue, bumpRefresh]);
+
   return (
     <div className="app">
-      <header className="app__header">
+      <header className="app__header glass">
         <div className="app__brand">
-          <h1>TriageHandler</h1>
-          <span className="app__sub">Emergency Department · Team Lessgo</span>
+          <span className="app__mark" aria-hidden="true">
+            T
+          </span>
+          <div>
+            <h1>TriageHandler</h1>
+            <span className="app__sub">Emergency Department · Team Lessgo</span>
+          </div>
         </div>
 
         <nav className="app__tabs">
@@ -94,7 +108,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="app__main">
+      <main className={`app__main ${tab === 'board' ? 'app__main--board' : ''}`}>
         {tab === 'board' && (
           <>
             <StatusBar
@@ -119,7 +133,13 @@ export default function App() {
               <div className="app__board-side">
                 <AlertFeed alerts={queue.alerts} onSelect={selectFromAlert} onDismiss={queue.dismissAlert} />
                 {selectedId ? (
-                  <PatientDetail encounterId={selectedId} onOverride={openOverride} refreshToken={refreshToken} />
+                  <PatientDetail
+                    encounterId={selectedId}
+                    onOverride={openOverride}
+                    onResolved={handleResolved}
+                    clinicians={clinicians}
+                    refreshToken={refreshToken}
+                  />
                 ) : (
                   <div className="app__placeholder">Select a patient to see why the assistant scored them.</div>
                 )}

@@ -52,20 +52,25 @@ export function DecayIndicator({ queue }) {
   const ratio = queue?.decayRatio ?? 0;
   const safeWait = queue?.safeWaitMinutes;
 
-  // A ratio over 1 is the interesting number: how far past the safe wait, not how
-  // far through it. Expressed as a percentage so it reads at a glance.
+  /**
+   * An ESI 1 patient has a safe wait of zero, and the engine represents "already
+   * breached, unboundedly" with a sentinel ratio. A percentage of zero is not a
+   * meaningful quantity, and rendering the sentinel produced "999% of safe wait" —
+   * a number that looks like a measurement and is not one. Say what is actually
+   * true instead: this patient should not be waiting at all.
+   */
+  const unbounded = !(safeWait > 0);
   const percent = Math.min(Math.round(ratio * 100), 999);
+  const detail = unbounded ? 'No safe wait — see now' : `${percent}% of ${safeWait}m`;
 
   return (
-    <span className={`decay decay--${DECAY_STATUS[status]}`} title={`${copy.label} (${percent}% of safe wait)`}>
+    <span className={`decay decay--${DECAY_STATUS[status]}`} title={`${copy.label} · ${detail}`}>
       <span aria-hidden="true" className="decay__glyph">
         {copy.glyph}
       </span>
       <span className="decay__text">
         <span className="decay__label">{copy.label}</span>
-        <span className="decay__ratio tabular">
-          {percent}%{safeWait != null && safeWait > 0 ? ` of ${safeWait}m` : ' — immediate'}
-        </span>
+        <span className={`decay__ratio ${unbounded ? '' : 'tabular'}`}>{detail}</span>
       </span>
     </span>
   );
