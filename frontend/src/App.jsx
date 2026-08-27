@@ -85,6 +85,14 @@ export default function App() {
     setSelectedId(encounterId);
   };
 
+  // A promotion reorders the board but keeps the patient on it, so unlike a
+  // resolve the selection is deliberately preserved — the nurse who just moved
+  // someone should still be looking at them afterwards.
+  const handleQueueChanged = useCallback(async () => {
+    await queue.refresh();
+    bumpRefresh();
+  }, [queue, bumpRefresh]);
+
   // A resolved patient leaves the board, so the selection has to go with them —
   // otherwise the detail panel keeps showing an encounter that is no longer in
   // the queue, which reads as though the action failed.
@@ -161,6 +169,7 @@ export default function App() {
                     encounterId={selectedId}
                     onOverride={openOverride}
                     onResolved={handleResolved}
+                    onQueueChanged={handleQueueChanged}
                     clinicians={clinicians}
                     refreshToken={refreshToken}
                   />

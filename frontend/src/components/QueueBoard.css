@@ -229,9 +229,28 @@
 /* --------------------------------------------------------------- row content */
 
 .board__ref {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   font-weight: 620;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.005em;
+}
+
+/* Accent, never a status colour — this patient is being seen sooner, which is
+   not the same claim as this patient is sicker. */
+.board__promoted {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  font-variant-numeric: normal;
+  white-space: nowrap;
 }
 
 .board__complaint {

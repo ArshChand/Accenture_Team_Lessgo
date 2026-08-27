@@ -40,6 +40,13 @@ export function minutesWaiting(encounter, now = new Date()) {
  * relative to an ESI level (1000 points) so it reorders within a level, never
  * across one — a vulnerable ESI 4 still waits behind every ESI 3.
  */
+/**
+ * Chosen to exceed the whole computed range rather than to be "large". Anything
+ * reachable by ordinary scoring would make promotion conditional on the patient
+ * not already being urgent, which is the opposite of what it is for.
+ */
+export const MANUAL_PROMOTION_BONUS = 100000;
+
 export function computeVulnerabilityBonus(encounter) {
   const band = encounter.age?.band;
   if (band === AGE_BAND.NEONATE || band === AGE_BAND.INFANT) return 150;
@@ -104,7 +111,21 @@ export function computeQueueState({ encounter, protocol, surgeActive = false, no
   // Higher ESI number = less urgent, so (6 - esi) puts ESI 1 highest. Decay and
   // vulnerability reorder within roughly one ESI band's worth of points, never
   // enough to let a long-waiting ESI 4 leapfrog a fresh ESI 2.
-  const priorityScore = (6 - esi) * 1000 + Math.min(decayRatio, 2) * 400 + vulnerabilityBonus;
+  const computedScore = (6 - esi) * 1000 + Math.min(decayRatio, 2) * 400 + vulnerabilityBonus;
+
+  /**
+   * A manual promotion sits above the entire computed range by construction:
+   * the largest score this formula can produce is 5000 + 800 + 150, so a bonus
+   * of 100000 cannot be reached by any combination of severity, waiting and
+   * vulnerability. That is the point — the nurse saw something the assistant
+   * cannot see, and the ordering has to reflect her, not argue with her.
+   *
+   * Promoted patients are still ranked against each other by their own computed
+   * score, so a promoted ESI 1 stays ahead of a promoted ESI 4. Promotion moves
+   * a patient to the front of the queue; it does not flatten the queue.
+   */
+  const promoted = Boolean(encounter.queue?.manualPromotion);
+  const priorityScore = promoted ? MANUAL_PROMOTION_BONUS + computedScore : computedScore;
 
   const interval = reassessmentIntervalMs(protocol, esi, surgeActive);
   const dueAt = encounter.queue?.reassessmentDueAt ? new Date(encounter.queue.reassessmentDueAt) : null;

@@ -77,7 +77,19 @@ export function QueueBoard({ encounters, selectedId, onSelect, surgeActive, acti
                   aria-selected={isSelected}
                 >
                   <td>
-                    <div className="board__ref">{encounter.displayRef}</div>
+                    <div className="board__ref">
+                      {encounter.displayRef}
+                      {/* A hand-reordered queue has to declare itself, or the next
+                          nurse on shift reads an order she cannot account for. */}
+                      {encounter.queue?.manualPromotion && (
+                        <span
+                          className="board__promoted"
+                          title={`Moved up by ${encounter.queue.manualPromotion.clinicianName}`}
+                        >
+                          Nurse-moved
+                        </span>
+                      )}
+                    </div>
                     <div className="board__complaint">{encounter.chiefComplaint}</div>
                     <div className="board__age">
                       {formatAge(encounter.age?.ageYears)}

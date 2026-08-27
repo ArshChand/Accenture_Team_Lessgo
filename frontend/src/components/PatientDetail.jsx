@@ -37,17 +37,26 @@ const MODE_COPY = {
   start_fallback: 'START protocol fallback — degraded',
 };
 
-export function PatientDetail({ encounterId, onOverride, onResolved, clinicians = [], refreshToken }) {
+export function PatientDetail({
+  encounterId,
+  onOverride,
+  onResolved,
+  onQueueChanged,
+  clinicians = [],
+  refreshToken,
+}) {
   const [data, setData] = useState(null);
   const [identity, setIdentity] = useState(null);
   const [error, setError] = useState(null);
   const [resolving, setResolving] = useState(false);
+  const [promoting, setPromoting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setIdentity(null);
     setError(null);
     setResolving(false);
+    setPromoting(false);
     api
       .encounter(encounterId)
       .then((result) => !cancelled && setData(result))
@@ -98,6 +107,31 @@ export function PatientDetail({ encounterId, onOverride, onResolved, clinicians 
 
       {latest?.mode && latest.mode !== 'full' && (
         <p className="detail__degraded">{MODE_COPY[latest.mode]}</p>
+      )}
+
+      {/* Shown prominently and permanently while it holds. A queue that has been
+          reordered by hand must say so — otherwise the next nurse on shift reads
+          an ordering she cannot explain and has no way to know it was deliberate. */}
+      {encounter.queue?.manualPromotion && (
+        <div className="detail__promoted">
+          <strong>Moved to the front of the queue.</strong>
+          <div className="detail__promoted-by">
+            {encounter.queue.manualPromotion.clinicianName}
+            {encounter.queue.manualPromotion.registrationNumber &&
+              ` · ${encounter.queue.manualPromotion.registrationNumber}`}
+            {' · '}
+            {PROMOTION_COPY[encounter.queue.manualPromotion.reasonCode] ??
+              encounter.queue.manualPromotion.reasonCode}
+          </div>
+          {encounter.queue.manualPromotion.reasonText && (
+            <blockquote className="detail__promoted-note">
+              “{encounter.queue.manualPromotion.reasonText}”
+            </blockquote>
+          )}
+          <div className="detail__promoted-note-esi">
+            Severity is still recorded as the assistant assessed it — ESI {encounter.currentESI}.
+          </div>
+        </div>
       )}
 
       {/* Identity is behind a deliberate, audited action. The board runs on
@@ -211,6 +245,30 @@ export function PatientDetail({ encounterId, onOverride, onResolved, clinicians 
           Review &amp; override severity
         </button>
 
+        {promoting ? (
+          <PromotePanel
+            encounter={encounter}
+            clinicians={clinicians}
+            onCancel={() => setPromoting(false)}
+            onDone={async () => {
+              setPromoting(false);
+              await onQueueChanged?.();
+            }}
+          />
+        ) : encounter.queue?.manualPromotion ? (
+          <button
+            type="button"
+            className="btn btn--block detail__release"
+            onClick={() => setPromoting(true)}
+          >
+            Release queue promotion
+          </button>
+        ) : (
+          <button type="button" className="btn btn--block" onClick={() => setPromoting(true)}>
+            Move to front of queue
+          </button>
+        )}
+
         {resolving ? (
           <ResolvePanel
             encounter={encounter}
@@ -225,6 +283,158 @@ export function PatientDetail({ encounterId, onOverride, onResolved, clinicians 
         )}
       </div>
     </aside>
+  );
+}
+
+/**
+ * Promotion reasons, worded as things that happen rather than as categories.
+ * Most of these describe an event in the waiting room — which is the whole
+ * point: they are the class of thing a model scoring a snapshot at arrival
+ * cannot observe, and the reason a human needs this control at all.
+ */
+const PROMOTION_COPY = {
+  VISIBLE_DETERIORATION: 'Looks worse than at arrival',
+  COLLAPSE_OR_SEVERE_DISTRESS: 'Collapsed or in severe distress',
+  CLINICAL_GESTALT: 'Clinical judgement — concerned about this patient',
+  FAMILY_OR_STAFF_ESCALATION: 'Family or staff raised the alarm',
+  INFORMATION_ASSISTANT_LACKED: 'I know something the assistant does not',
+  OPERATIONAL: 'Operational — resource or flow reason',
+  OTHER: 'Other',
+};
+
+const PROMOTION_ORDER = [
+  'VISIBLE_DETERIORATION',
+  'COLLAPSE_OR_SEVERE_DISTRESS',
+  'CLINICAL_GESTALT',
+  'FAMILY_OR_STAFF_ESCALATION',
+  'INFORMATION_ASSISTANT_LACKED',
+  'OPERATIONAL',
+  'OTHER',
+];
+
+/**
+ * Moving a patient to the front of the queue, or letting them back down to
+ * where the assistant had them.
+ *
+ * The asymmetry is the point, and it runs the opposite way to the resolve
+ * dialog: promoting is cheap because being seen sooner cannot hurt anyone,
+ * while releasing costs a written reason because it sends a patient a clinician
+ * judged urgent back into the queue. There is no control here for pushing
+ * someone below their computed position, deliberately — the ordering can be
+ * overridden upward by a human and downward by nothing.
+ */
+function PromotePanel({ encounter, clinicians, onCancel, onDone }) {
+  const isRelease = Boolean(encounter.queue?.manualPromotion);
+  const [reasonCode, setReasonCode] = useState('VISIBLE_DETERIORATION');
+  const [reasonText, setReasonText] = useState('');
+  const [clinicianId, setClinicianId] = useState(clinicians[0]?._id ?? '');
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  const reasonShort = reasonText.trim().length < MIN_REASON;
+  const blocked = !clinicianId || (isRelease && reasonShort);
+
+  const submit = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.promote(String(encounter._id), {
+        clinicianId,
+        reasonCode: isRelease ? undefined : reasonCode,
+        reasonText,
+        release: isRelease,
+      });
+      await onDone?.();
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="resolve">
+      <h3 className="resolve__title">
+        {isRelease ? `Return ${encounter.displayRef} to the normal queue` : `Move ${encounter.displayRef} to the front`}
+      </h3>
+
+      {isRelease ? (
+        <p className="resolve__note">
+          This sends a patient someone judged urgent back to their computed position. It does not change
+          their recorded severity, and cannot place them lower than the assistant already had them.
+        </p>
+      ) : (
+        <>
+          <p className="resolve__note">
+            Changes who is seen next only. The recorded severity stays ESI {encounter.currentESI} — if the
+            assistant has the severity wrong, use override instead.
+          </p>
+          <div className="resolve__options" role="radiogroup" aria-label="Reason for promoting">
+            {PROMOTION_ORDER.map((code) => (
+              <label key={code} className={`resolve__option ${reasonCode === code ? 'is-selected' : ''}`}>
+                <input
+                  type="radio"
+                  name="promotion-reason"
+                  value={code}
+                  checked={reasonCode === code}
+                  onChange={() => setReasonCode(code)}
+                />
+                <span>
+                  <span className="resolve__option-label">{PROMOTION_COPY[code]}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="resolve__reason">
+        <label htmlFor="promote-reason">
+          {isRelease ? 'Why is it safe for them to wait normally?' : 'Anything to add? (optional)'}
+        </label>
+        <textarea
+          id="promote-reason"
+          rows={3}
+          value={reasonText}
+          onChange={(e) => setReasonText(e.target.value)}
+          placeholder={isRelease ? 'Minimum 20 characters.' : 'What did you see?'}
+        />
+        {isRelease && (
+          <span className={`resolve__counter ${reasonShort ? 'is-short' : ''}`}>
+            {reasonText.trim().length} / {MIN_REASON}
+          </span>
+        )}
+      </div>
+
+      <label className="resolve__field">
+        <span>Recorded by</span>
+        <select value={clinicianId} onChange={(e) => setClinicianId(e.target.value)}>
+          <option value="">Select clinician…</option>
+          {clinicians.map((c) => (
+            <option key={c._id} value={c._id}>
+              {c.name} · {c.registrationNumber}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {error && <p className="resolve__error">{error}</p>}
+
+      <div className="resolve__buttons">
+        <button type="button" className="btn btn--ghost btn--small" onClick={onCancel} disabled={busy}>
+          Cancel
+        </button>
+        <button
+          type="button"
+          className={`btn btn--small ${isRelease ? 'btn--danger' : 'btn--primary'}`}
+          onClick={submit}
+          disabled={blocked || busy}
+        >
+          {busy ? 'Saving…' : isRelease ? 'Release promotion' : 'Move to front'}
+        </button>
+      </div>
+
+      <p className="resolve__note">Recorded as an audit event against the clinician above.</p>
+    </div>
   );
 }
 

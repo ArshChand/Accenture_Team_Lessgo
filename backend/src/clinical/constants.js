@@ -191,6 +191,27 @@ export const OVERRIDE_REASON = {
 
 export const OVERRIDE_REASONS = Object.values(OVERRIDE_REASON);
 
+/**
+ * Why a nurse pulled a patient up the queue by hand.
+ *
+ * Deliberately a separate vocabulary from OVERRIDE_REASON, because this is a
+ * different act: an override changes what the system believes about a patient's
+ * severity, a promotion changes only who gets seen next. Most of these describe
+ * something that happened in the waiting room, which is precisely the category
+ * of event no model scoring a snapshot at arrival can ever observe.
+ */
+export const PROMOTION_REASON = {
+  VISIBLE_DETERIORATION: 'VISIBLE_DETERIORATION',
+  COLLAPSE_OR_SEVERE_DISTRESS: 'COLLAPSE_OR_SEVERE_DISTRESS',
+  CLINICAL_GESTALT: 'CLINICAL_GESTALT',
+  FAMILY_OR_STAFF_ESCALATION: 'FAMILY_OR_STAFF_ESCALATION',
+  INFORMATION_ASSISTANT_LACKED: 'INFORMATION_ASSISTANT_LACKED',
+  OPERATIONAL: 'OPERATIONAL',
+  OTHER: 'OTHER',
+};
+
+export const PROMOTION_REASONS = Object.values(PROMOTION_REASON);
+
 export const AUDIT_EVENT_TYPE = {
   TRIAGE_ASSIGNED: 'TRIAGE_ASSIGNED',
   TRIAGE_OVERRIDE: 'TRIAGE_OVERRIDE',
@@ -199,6 +220,8 @@ export const AUDIT_EVENT_TYPE = {
   CONSENT_RECORDED: 'CONSENT_RECORDED',
   CONSENT_WITHDRAWN: 'CONSENT_WITHDRAWN',
   ENCOUNTER_STATUS_CHANGED: 'ENCOUNTER_STATUS_CHANGED',
+  /** A nurse moved a patient up the queue by hand, or released that promotion. */
+  QUEUE_MANUAL_PROMOTION: 'QUEUE_MANUAL_PROMOTION',
   SURGE_STATE_CHANGED: 'SURGE_STATE_CHANGED',
   WAIT_THRESHOLD_BREACHED: 'WAIT_THRESHOLD_BREACHED',
   CORRECTION: 'CORRECTION',
