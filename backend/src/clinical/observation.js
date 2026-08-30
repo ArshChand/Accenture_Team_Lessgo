@@ -53,7 +53,6 @@ export const measured = (value, opts) => observation(value, SOURCE.MEASURED, opt
 export const observed = (value, opts) => observation(value, SOURCE.CLINICIAN_OBSERVED, opts);
 export const selfReported = (value, opts) => observation(value, SOURCE.PATIENT_REPORTED, opts);
 export const proxyReported = (value, opts) => observation(value, SOURCE.PROXY_REPORTED, opts);
-export const fromPriorRecord = (value, opts) => observation(value, SOURCE.PRIOR_RECORD, opts);
 
 /** Unwrap an observation for arithmetic; returns undefined when it is absent. */
 export const valueOf = (obs) => (obs === undefined || obs === null ? undefined : obs.value);
