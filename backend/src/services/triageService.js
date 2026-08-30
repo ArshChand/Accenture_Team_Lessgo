@@ -81,6 +81,20 @@ export async function scoreAndPersist({
   surgeActive = false,
   persist = true,
   actor,
+  /**
+   * True exactly when this call is scoring the first vitals ever recorded
+   * for this encounter. Registration now scores immediately on a chief
+   * complaint alone (see routes/triage.js), which means the standing ESI a
+   * patient arrives with is often a pure uncertainty escalation — not a real
+   * assessment of anything measured. Without this flag, the escalate-only
+   * ratchet below would treat that guess exactly like a clinician's standing
+   * decision and refuse to let the very first real vitals correct it
+   * downward, permanently over-triaging every patient whose honest first
+   * reading turns out lower than the uncertainty ceiling. It changes nothing
+   * about any later re-score: wait-decay and subsequent vitals changes are
+   * still escalate-only, because by then a real assessment exists to protect.
+   */
+  firstRealAssessment = false,
 }) {
   const started = Date.now();
   const protocol = getActiveProtocol();
@@ -205,7 +219,7 @@ export async function scoreAndPersist({
   // code, a written justification and an attestation. The machine proposes, and
   // the proposal is always visible as `aiRecommendedESI`; a human disposes.
   const standingESI = encounter.currentESI;
-  const hasStandingScore = Number.isFinite(standingESI);
+  const hasStandingScore = Number.isFinite(standingESI) && !firstRealAssessment;
   const escalates = !hasStandingScore || fusion.finalESI < standingESI;
 
   const updates = {

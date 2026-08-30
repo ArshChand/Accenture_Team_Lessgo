@@ -156,6 +156,15 @@ and holds until a clinician releases it, which — mirroring the override
 asymmetry — requires a reason and twenty characters of justification, the same
 friction a de-escalation demands.
 
+**Hospital-systems boundary.** A read-only adapter
+(`backend/src/integrations/hospitalSystems.js`) stands between this app and the
+rest of a hospital's IT estate — an EHR/HIS lookup for a patient with no local
+record yet, and live bed availability shown as context on the dashboard.
+Neither ever reaches the scoring pipeline: a stale or unreachable hospital
+system can degrade intake convenience, never a patient's ESI. A real
+deployment swaps the mock adapter for one hitting the hospital's actual
+systems; nothing upstream changes.
+
 ---
 
 ## Measured performance
@@ -184,6 +193,7 @@ backend/          Express · Socket.IO · Mongoose
   src/clinical/     rules, age bands, fusion, confidence, START, protocols
   src/queue/        decay, surge, the re-triage engine
   src/services/     triage orchestration, audit chain, ML client
+  src/integrations/ read-only boundary to the hospital's own systems
   scripts/          seed, demos, fusion evaluation
 ml-service/       FastAPI · XGBoost
   app/              synthetic generator, training, scoring, multilingual NLP
@@ -197,13 +207,14 @@ docs/             architecture · data model · safety case · compliance
 | [Data model](docs/data-model.md) | collections, provenance, confidence |
 | [Safety case](docs/safety-case.md) | measured performance, operating point, limitations |
 | [Compliance](docs/compliance.md) | DPDP 2023 + ABDM, with HIPAA/GDPR mapping |
+| [Adoption](docs/adoption.md) | why the interaction design doesn't manufacture its own workarounds |
 
 ---
 
 ## Tests
 
 ```bash
-npm test                                          # 189 backend tests
+npm test                                          # 198 backend tests
 npm run test:ml                                   # 47 ML-service tests
 ```
 

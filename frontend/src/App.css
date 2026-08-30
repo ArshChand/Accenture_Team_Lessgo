@@ -139,7 +139,11 @@
 
 .app__board-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 400px;
+  /* 460px, not 400px: the side column carries the patient detail panel — vitals,
+     every fired rule with its evidence, and the promote/override actions — and
+     at 400px that content read as cramped rather than dense. The board's table
+     columns have plenty of slack to give up 60px on a normal desktop width. */
+  grid-template-columns: minmax(0, 1fr) 460px;
   gap: var(--sp-4);
   align-items: stretch;
   flex: 1 1 auto;

@@ -91,6 +91,110 @@
   text-align: right;
 }
 
+/* ----------------------------------------------------------- patient search */
+
+/**
+ * The escape hatch for surge collapse: this searches every waiting patient,
+ * never just the visible top-N, so it has to sit in the header rather than
+ * imply it only searches what is on screen. `margin-left: auto` only when
+ * surge is off (the mode banner claims that role once it renders) keeps it
+ * from fighting the mode banner for the same right-aligned slot; both being
+ * flex siblings, the banner naturally lands after it either way.
+ */
+.board__search {
+  position: relative;
+  flex: 0 1 260px;
+  margin-left: auto;
+}
+
+.board__search-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--ink);
+  font-size: var(--text-sm);
+}
+
+.board__search-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Anchored to the left edge and given its own width rather than matching the
+   (deliberately narrow) input: a row needs room for an ESI badge, a ref, the
+   complaint, and possibly a "not shown" tag, and tying the dropdown to the
+   input's 260px was squeezing the last of those silently past the edge
+   instead of wrapping or shrinking. */
+.board__search-results {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  left: 0;
+  width: max(100%, 360px);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--edge-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.board__search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-size: var(--text-sm);
+}
+
+.board__search-result:hover,
+.board__search-result:focus-visible {
+  background: var(--accent-wash);
+}
+
+.board__search-result-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+}
+
+.board__search-ref {
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.board__search-offscreen {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline-strong);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.board__search-complaint {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-secondary);
+}
+
 .board__mode-tag {
   font-size: var(--text-xs);
   font-weight: 700;

@@ -22,7 +22,7 @@ const TRANSPORT_COPY = {
   connecting: { label: 'Connecting', detail: 'Establishing live connection', status: 'neutral' },
 };
 
-export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, lastUpdateAt }) {
+export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, lastUpdateAt, beds, bedsUnreachable }) {
   const waiting = encounters.length;
   const breached = encounters.filter((e) => e.queue?.decayStatus === 'red').length;
   const approaching = encounters.filter((e) => e.queue?.decayStatus === 'amber').length;
@@ -30,6 +30,14 @@ export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, l
   const lowConfidence = encounters.filter((e) => e.currentConfidence?.band === 'low').length;
 
   const conn = TRANSPORT_COPY[transport] ?? TRANSPORT_COPY.connecting;
+
+  // Read-only context from the hospital's own bed-management system — never a
+  // scoring input, so its own unreachability is reported as "unknown", not as
+  // anything that touches the assistant's confidence in a triage decision.
+  const bedTotals = beds?.departments?.reduce(
+    (acc, dept) => ({ available: acc.available + dept.available, capacity: acc.capacity + dept.capacity }),
+    { available: 0, capacity: 0 },
+  );
 
   return (
     <div className="statusbar">
@@ -96,7 +104,9 @@ export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, l
           status={capacityDebtMinutes > 0 ? 'warning' : 'neutral'}
           hint="Minutes owed past safe waits"
         />
+      </div>
 
+      <div className="stats stats--context">
         <div className={`stat stat--conn stat--${conn.status}`}>
           <div className="stat__label">Connection</div>
           <div className="stat__value stat__value--sm">
@@ -106,6 +116,22 @@ export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, l
           <div className="stat__hint">
             {conn.detail}
             {lastUpdateAt && ` · ${new Date(lastUpdateAt).toLocaleTimeString()}`}
+          </div>
+        </div>
+
+        {/*
+          Read-only situational awareness from the hospital's own bed-
+          management system (backend/src/integrations/) — never a scoring
+          input, so its own unreachability degrades to "figure unknown"
+          rather than to anything touching a triage decision.
+        */}
+        <div className="stat stat--conn">
+          <div className="stat__label">Beds available</div>
+          <div className="stat__value stat__value--sm">
+            {bedsUnreachable ? '—' : bedTotals ? `${bedTotals.available}/${bedTotals.capacity}` : '…'}
+          </div>
+          <div className="stat__hint">
+            {bedsUnreachable ? 'Bed system unreachable' : 'Across all departments'}
           </div>
         </div>
       </div>

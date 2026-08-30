@@ -26,6 +26,8 @@ export default function App() {
   const [overrideTarget, setOverrideTarget] = useState(null);
   const [refreshToken, setRefreshToken] = useState(0);
   const [theme, setTheme] = useState('system');
+  const [beds, setBeds] = useState(null);
+  const [bedsUnreachable, setBedsUnreachable] = useState(false);
 
   const bumpRefresh = useCallback(() => setRefreshToken((n) => n + 1), []);
 
@@ -59,6 +61,29 @@ export default function App() {
     const timer = setInterval(loadClinicians, 5000);
     return () => clearInterval(timer);
   }, [clinicians.length, loadClinicians]);
+
+  /**
+   * Bed availability comes from the hospital's own bed-management system, not
+   * from anything this app computes — see `backend/src/integrations/`. It is
+   * read on a slower cadence than the queue because it is context for a human,
+   * never an input to a score, and a failure here degrades to "figure unknown"
+   * rather than to anything touching triage.
+   */
+  const loadBeds = useCallback(async () => {
+    try {
+      const data = await api.bedAvailability();
+      setBeds(data);
+      setBedsUnreachable(false);
+    } catch {
+      setBedsUnreachable(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBeds();
+    const timer = setInterval(loadBeds, 20000);
+    return () => clearInterval(timer);
+  }, [loadBeds]);
 
   useEffect(() => {
     if (theme === 'system') document.documentElement.removeAttribute('data-theme');
@@ -149,6 +174,8 @@ export default function App() {
               transport={queue.transport}
               capacityDebtMinutes={queue.capacityDebtMinutes}
               lastUpdateAt={queue.lastUpdateAt}
+              beds={beds}
+              bedsUnreachable={bedsUnreachable}
             />
 
             <div className="app__board-layout">

@@ -288,7 +288,7 @@ carefulness.
 npm install
 npm run dev                    # backend :4000, frontend :5173, ML :8000
 
-npm test                       # 189 backend tests
+npm test                       # 198 backend tests
 npm run test:ml                # 47 ML-service tests
 
 npm run seed                   # 20 curated patients, self-checked

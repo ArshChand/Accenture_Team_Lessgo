@@ -58,4 +58,12 @@ export const api = {
     request(`/encounters/${encounterId}/vitals`, { method: 'POST', body: JSON.stringify(payload) }),
 
   advanceTime: (payload) => request('/simulate/advance-time', { method: 'POST', body: JSON.stringify(payload) }),
+
+  bedAvailability: () => request('/integrations/beds'),
+  hisLookup: ({ phone, abhaId }) => {
+    const query = new URLSearchParams(
+      Object.entries({ phone, abhaId }).filter(([, v]) => v),
+    ).toString();
+    return request(`/integrations/his-lookup?${query}`);
+  },
 };
