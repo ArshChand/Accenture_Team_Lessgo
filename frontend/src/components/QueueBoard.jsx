@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { ConfidenceChip, DecayIndicator, EsiBadge, formatAge, formatWait, minutesSince } from './clinical.jsx';
 import './QueueBoard.css';
 
@@ -9,14 +10,38 @@ import './QueueBoard.css';
  * surge the board collapses to a top-N action list: at 3x volume a nurse cannot
  * read forty rows, and showing her forty is the same as showing her none.
  *
+ * "Not shown" does not mean "not on the board" — every waiting patient is still
+ * decaying and still re-triaged on the engine's own clock regardless of surge
+ * collapse. The search below is the deliberate escape hatch: it always searches
+ * every waiting patient, collapsed view or not, so a nurse who needs patient #15
+ * specifically is never stuck scrolling a list that was deliberately shortened.
+ *
  * The list scrolls inside a fixed frame rather than growing the page. Two reasons:
  * the department stats and the alert feed must stay on screen when the queue is
  * longest, and a sticky header means row four hundred is still readable as data
  * rather than as six unlabelled columns.
  */
 export function QueueBoard({ encounters, selectedId, onSelect, surgeActive, actionListSize = 8 }) {
+  const [query, setQuery] = useState('');
   const visible = surgeActive ? encounters.slice(0, actionListSize) : encounters;
   const hidden = encounters.length - visible.length;
+
+  const trimmedQuery = query.trim().toLowerCase();
+  const searchResults = useMemo(() => {
+    if (!trimmedQuery) return [];
+    return encounters
+      .filter(
+        (e) =>
+          e.displayRef?.toLowerCase().includes(trimmedQuery) ||
+          e.chiefComplaint?.toLowerCase().includes(trimmedQuery),
+      )
+      .slice(0, 6);
+  }, [encounters, trimmedQuery]);
+
+  const selectFromSearch = (encounter) => {
+    onSelect(String(encounter._id));
+    setQuery('');
+  };
 
   if (!encounters.length) {
     return (
@@ -35,11 +60,46 @@ export function QueueBoard({ encounters, selectedId, onSelect, surgeActive, acti
           {visible.length}
           {hidden > 0 && <span className="board__count-of"> of {encounters.length}</span>}
         </span>
+
+        <div className="board__search">
+          <input
+            type="search"
+            className="board__search-input"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Find a patient by ID or complaint…"
+            aria-label="Find a patient, including those not currently shown"
+          />
+          {searchResults.length > 0 && (
+            <ul className="board__search-results" role="listbox">
+              {searchResults.map((encounter) => {
+                const offScreen = !visible.some((v) => String(v._id) === String(encounter._id));
+                return (
+                  <li key={encounter._id}>
+                    <button
+                      type="button"
+                      className="board__search-result"
+                      onClick={() => selectFromSearch(encounter)}
+                    >
+                      <span className="board__search-result-head">
+                        <EsiBadge esi={encounter.currentESI} />
+                        <span className="board__search-ref">{encounter.displayRef}</span>
+                        {offScreen && <span className="board__search-offscreen">not shown</span>}
+                      </span>
+                      <span className="board__search-complaint">{encounter.chiefComplaint}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
         {surgeActive && (
           <p className="board__mode">
             <span className="board__mode-tag">Surge</span>
             Highest-priority {visible.length} shown
-            {hidden > 0 && ` · ${hidden} others still monitored and still decaying`}
+            {hidden > 0 && ` · ${hidden} others still monitored and still decaying — search above to open one`}
           </p>
         )}
       </header>

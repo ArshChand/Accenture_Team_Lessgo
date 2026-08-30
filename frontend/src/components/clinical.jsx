@@ -125,7 +125,7 @@ const SOURCE_COPY = {
  * belong on screen; only one of them is a clinical reason, and the interface
  * should not blur them together.
  */
-export function ExplainFlags({ flags, limit }) {
+export function ExplainFlags({ flags, limit, onShowMore }) {
   if (!flags?.length) return <p className="explain-empty">No flags raised.</p>;
   const shown = limit ? flags.slice(0, limit) : flags;
 
@@ -144,7 +144,15 @@ export function ExplainFlags({ flags, limit }) {
         </li>
       ))}
       {limit && flags.length > limit && (
-        <li className="explain explain--more">+{flags.length - limit} more</li>
+        <li className="explain explain--more">
+          {onShowMore ? (
+            <button type="button" className="explain__more-btn" onClick={onShowMore}>
+              +{flags.length - limit} more reason{flags.length - limit === 1 ? '' : 's'} — show all
+            </button>
+          ) : (
+            `+${flags.length - limit} more`
+          )}
+        </li>
       )}
     </ul>
   );

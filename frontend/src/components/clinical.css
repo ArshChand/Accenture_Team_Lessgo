@@ -232,6 +232,22 @@
   color: var(--ink-muted);
   font-size: var(--text-sm);
   text-align: center;
+  padding: 0;
+}
+
+.explain__more-btn {
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  color: var(--accent-ink);
+  font-size: var(--text-sm);
+  font-weight: 550;
+  border: 1px dashed var(--hairline-strong);
+  border-radius: var(--radius-sm);
+}
+
+.explain__more-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-wash);
 }
 
 .explain__head {

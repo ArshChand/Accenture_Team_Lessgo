@@ -126,7 +126,20 @@ export function triageRoutes() {
         status: ENCOUNTER_STATUS.WAITING,
       });
 
-      return res.status(201).json({ encounter });
+      // A patient waits on the queue's own clock the instant they register, so
+      // they get scored the instant they register — on whatever exists, which at
+      // this point is often nothing but a chief complaint and a transcript. That
+      // is exactly the thin-data case the rule engine's absolute thresholds and
+      // the confidence composite's completeness penalty already exist to handle;
+      // leaving the encounter unscored until someone later takes vitals would
+      // mean a dangerous chief complaint sits with no ESI at all in the meantime.
+      const { encounter: scored } = await scoreAndPersist({
+        encounter,
+        patient,
+        trigger: TRIAGE_TRIGGER.INITIAL,
+      });
+
+      return res.status(201).json({ encounter: scored });
     }),
   );
 
@@ -169,6 +182,12 @@ export function triageRoutes() {
       const encounter = await repositories.encounters.findById(req.params.id);
       if (!encounter) return res.status(404).json({ error: 'encounter_not_found' });
 
+      // Registration now scores immediately on whatever exists — often nothing
+      // but a chief complaint — so the very first real vitals are not "new
+      // evidence changing an assessment", they are the first assessment. See
+      // the comment on scoreAndPersist's `firstRealAssessment` parameter.
+      const isFirstEverVitals = !encounter.latestVitalsRef;
+
       const vitals = await repositories.vitals.create({
         ...req.body,
         encounterRef: encounter._id,
@@ -184,6 +203,7 @@ export function triageRoutes() {
         encounter: { ...encounter, latestVitalsRef: vitals._id },
         vitals,
         trigger: TRIAGE_TRIGGER.VITALS_CHANGE,
+        firstRealAssessment: isFirstEverVitals,
       });
 
       return res.status(201).json({ vitals, assessment: scored.assessment, encounter: scored.encounter });

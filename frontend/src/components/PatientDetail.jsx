@@ -50,6 +50,7 @@ export function PatientDetail({
   const [error, setError] = useState(null);
   const [resolving, setResolving] = useState(false);
   const [promoting, setPromoting] = useState(false);
+  const [showAllFlags, setShowAllFlags] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,6 +58,7 @@ export function PatientDetail({
     setError(null);
     setResolving(false);
     setPromoting(false);
+    setShowAllFlags(false);
     api
       .encounter(encounterId)
       .then((result) => !cancelled && setData(result))
@@ -184,7 +186,16 @@ export function PatientDetail({
 
       <section className="detail__section">
         <h3>Why this score</h3>
-        <ExplainFlags flags={latest?.explainFlags ?? []} />
+        <ExplainFlags
+          flags={latest?.explainFlags ?? []}
+          limit={showAllFlags ? undefined : 3}
+          onShowMore={() => setShowAllFlags(true)}
+        />
+        {showAllFlags && (latest?.explainFlags?.length ?? 0) > 3 && (
+          <button type="button" className="detail__flags-collapse" onClick={() => setShowAllFlags(false)}>
+            Show fewer
+          </button>
+        )}
         {latest?.confidence?.drivers?.length > 0 && (
           <div className="detail__drivers">
             <strong>Why the assistant is unsure:</strong>
