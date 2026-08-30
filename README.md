@@ -165,6 +165,15 @@ system can degrade intake convenience, never a patient's ESI. A real
 deployment swaps the mock adapter for one hitting the hospital's actual
 systems; nothing upstream changes.
 
+**Progressive disclosure on the dashboard.** The triage queue is the working
+view; the full metrics grid, the alert list and bed/connection capacity each
+live in their own board tab instead of competing for space around it. A slim
+strip above the tabs — waiting count, safe-wait breaches, the surge banner —
+stays visible no matter which tab is open, and a breach or a new alert shows
+as a badge on its tab, so decluttering the main view never means a nurse can
+miss one. Nothing unmounts on tab switch: a half-typed queue search or an
+in-progress override survives a trip to another tab and back.
+
 ---
 
 ## Measured performance

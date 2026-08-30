@@ -1,8 +1,65 @@
-.statusbar {
+/**
+ * The one piece of department state that is never a tab-click away. Everything
+ * else the old single statusbar carried — the full metrics grid, connection
+ * detail, bed availability — lives in its own board tab now; this stays put so
+ * a breach can never be missed just because a nurse happened to be on a
+ * different tab when it happened.
+ */
+.safety-summary {
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
   flex: 0 0 auto;
+}
+
+.safety-summary__row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.safety-summary__item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.safety-summary__value {
+  font-size: var(--text-lg);
+  font-weight: 720;
+  color: var(--ink-stark);
+}
+
+.safety-summary__item.is-critical .safety-summary__value {
+  background: var(--grad-critical);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.safety-summary__label {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.safety-summary__divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--hairline-strong);
+}
+
+.safety-summary__flag {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--status-critical-ink);
 }
 
 /* -------------------------------------------------------------- surge banner */
@@ -118,7 +175,12 @@
  */
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  /* 190px, not 150px: measured directly against the rendered DOM, "Approaching
+     limit" needs ~138px of label content plus 32px of tile padding before it
+     ellipsises — 150px cut it to a 9px margin that broke as soon as this grid
+     moved into the narrower Metrics tab column instead of the full board width
+     it was tuned against originally. */
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   grid-auto-rows: 1fr;
   grid-auto-flow: dense;
   gap: var(--sp-3);
@@ -335,4 +397,66 @@
     animation: none;
     display: none;
   }
+}
+
+/* --------------------------------------------------------------- capacity tab */
+
+.capacity-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.capacity-panel__depts {
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--sp-4);
+}
+
+.capacity-panel__depts h3 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.capacity-panel__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-base);
+}
+
+.capacity-panel__table th {
+  text-align: left;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.capacity-panel__table td {
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.capacity-panel__table tr:last-child td {
+  border-bottom: none;
+}
+
+.capacity-panel__table td.is-critical {
+  color: var(--status-critical-ink);
+  font-weight: 700;
+}
+
+.capacity-panel__source {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
 }
