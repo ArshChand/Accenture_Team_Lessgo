@@ -101,9 +101,17 @@
 
 /**
  * A bento grid: seven cells on a shared baseline, one of which — the tile that
- * is actually the emergency — is allowed to claim a second column and a taller
- * row exactly when it has something to claim it for. `grid-auto-flow: dense`
- * lets the tiles after it re-pack around the gap instead of leaving a hole.
+ * is actually the emergency — claims a second *column* exactly when it has
+ * something to claim it for. `grid-auto-flow: dense` lets the tiles after it
+ * re-pack around the gap instead of leaving a hole.
+ *
+ * Width only, never height. An earlier version also spanned two rows, which
+ * looked right in isolation and wrong in place: at a normal desktop width all
+ * seven tiles already fit on a single row, so the row the hero was reaching
+ * into did not otherwise exist. The grid grew a second row that only ever
+ * contained the hero, leaving it stretched to roughly double the height of its
+ * neighbours with dead space alongside. Spanning columns keeps the emphasis and
+ * keeps every tile on one baseline.
  */
 .stats {
   display: grid;
@@ -135,15 +143,17 @@
 @media (min-width: 720px) {
   .stat--hero {
     grid-column: span 2;
-    grid-row: span 2;
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding: var(--sp-4) var(--sp-5);
   }
 
+  /* Large enough to dominate the row, small enough that it sets a sane shared
+     height — `grid-auto-rows: 1fr` equalises every tile in the row to the
+     tallest, so this number is what the whole row's height is driven by. */
   .stat--hero .stat__value {
-    font-size: 52px;
+    font-size: 40px;
   }
 
   .stat--hero .stat__label {

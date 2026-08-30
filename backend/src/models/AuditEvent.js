@@ -4,6 +4,7 @@ import {
   CLINICIAN_ROLES,
   LAWFUL_BASES,
   OVERRIDE_REASONS,
+  PROMOTION_REASONS,
   RETENTION_CLASSES,
 } from '../clinical/constants.js';
 
@@ -63,8 +64,14 @@ const AuditEventSchema = new Schema(
     before: { type: Schema.Types.Mixed },
     after: { type: Schema.Types.Mixed },
 
-    /** Structured reason — mandatory for TRIAGE_OVERRIDE. */
-    reasonCode: { type: String, enum: [...OVERRIDE_REASONS, null] },
+    /**
+     * Structured reason — mandatory for TRIAGE_OVERRIDE and for a queue
+     * promotion. The two vocabularies stay separate because they answer
+     * different questions ("why is the score wrong" vs "why is this patient
+     * being seen sooner"), but they share one field so a reviewer reads one
+     * trail rather than two.
+     */
+    reasonCode: { type: String, enum: [...OVERRIDE_REASONS, ...PROMOTION_REASONS, null] },
     reasonText: { type: String },
     /**
      * Explicit attestation that the clinician physically assessed the patient.

@@ -6,6 +6,7 @@ import {
   ENCOUNTER_STATUS,
   ENCOUNTER_STATUSES,
   ESI_LEVELS,
+  PROMOTION_REASONS,
 } from '../clinical/constants.js';
 import { AgeContextSchema, ConfidenceSchema, TranscriptSchema } from './subschemas.js';
 
@@ -44,6 +45,39 @@ const QueueStateSchema = new Schema(
      * actually breaks down — a single undifferentiated bucket is useless at 3x.
      */
     surgeSubBand: { type: String, enum: ['3A', '3B', null], default: null },
+
+    /**
+     * A nurse pulling a patient up the queue by hand.
+     *
+     * This exists because the assistant scores a snapshot and the waiting room
+     * keeps happening: a patient who looked stable at intake and is now grey and
+     * clammy is information no model in this system can obtain. The nurse can
+     * always see something it cannot.
+     *
+     * Deliberately separate from `currentESI`. A promotion changes *who is seen
+     * next*, never what the record says about how sick the patient is. Folding
+     * the two together would corrupt the clinical history and every safety
+     * metric derived from it, and would let an operational decision masquerade
+     * as a clinical finding. If the nurse means "this patient is sicker than you
+     * think", that is an override and it has its own audited path.
+     *
+     * Null when the patient sits at their computed position. Set, it holds until
+     * the patient leaves the queue or the promoting decision is released.
+     */
+    manualPromotion: {
+      type: new Schema(
+        {
+          promotedAt: { type: Date, required: true },
+          clinicianRef: { type: Schema.Types.ObjectId, ref: 'Clinician' },
+          clinicianName: { type: String, required: true },
+          registrationNumber: { type: String },
+          reasonCode: { type: String, enum: PROMOTION_REASONS, required: true },
+          reasonText: { type: String },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
   },
   { _id: false },
 );

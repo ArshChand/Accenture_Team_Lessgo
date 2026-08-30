@@ -1,14 +1,25 @@
 import { createHash } from 'node:crypto';
 import { repositories } from '../db/index.js';
-import { ENCOUNTER_STATUS, SCORING_MODE, TRIAGE_TRIGGER } from '../clinical/constants.js';
+import {
+  ENCOUNTER_STATUS,
+  PROMOTION_REASONS,
+  SCORING_MODE,
+  TRIAGE_TRIGGER,
+} from '../clinical/constants.js';
 import { buildRuleContext, evaluateRules } from '../clinical/rules.js';
 import { computeConfidence } from '../clinical/confidence.js';
 import { buildExplainFlags, fuse } from '../clinical/fusion.js';
 import { evaluateStartProtocol } from '../clinical/start.js';
 import { safeWaitMinutesWith } from '../clinical/protocol.js';
+import { computeQueueState } from '../queue/decay.js';
 import { getActiveProtocol } from './protocolService.js';
 import { buildScoringSnapshot, scoreEncounter } from './mlClient.js';
-import { recordOverride, recordStatusChange, recordTriageAssigned } from './auditService.js';
+import {
+  recordOverride,
+  recordQueuePromotion,
+  recordStatusChange,
+  recordTriageAssigned,
+} from './auditService.js';
 import { canonicalJSON } from './auditService.js';
 
 /**
@@ -305,6 +316,117 @@ export async function applyOverride({
   });
 
   return { encounter: updated, auditEvent, previousESI, newESI };
+}
+
+/** Matches the de-escalation bar: the same weight of act deserves the same bar. */
+export const PROMOTION_MIN_REASON_LENGTH = 20;
+
+/**
+ * A nurse moving a patient to the front of the queue, or releasing that.
+ *
+ * Promotion is one action and a reason code. Releasing one costs more — a
+ * written justification — and that asymmetry is the whole safety argument for
+ * letting this exist at all. Moving a patient up can only ever mean they are
+ * seen sooner than an algorithm suggested; taking the promotion away means
+ * someone a clinician judged urgent goes back to waiting, which is the
+ * direction that hurts people. Same reasoning as the ESI override path, applied
+ * to position instead of severity.
+ *
+ * There is deliberately no way to push a patient *below* their computed
+ * position. The queue can be overridden upward by a human and downward by
+ * nothing, so no manual action can ever delay a patient the system considers
+ * sick. Release returns them to where the assistant already had them; it cannot
+ * go lower than that.
+ *
+ * Note what this does not touch: `currentESI`. The clinical record still says
+ * what the assistant assessed, the safety metrics stay honest, and "seen
+ * sooner" never silently becomes "recorded as sicker".
+ */
+export async function applyQueuePromotion({
+  encounterId,
+  clinicianId,
+  reasonCode,
+  reasonText,
+  release = false,
+  session = {},
+}) {
+  const encounter = await repositories.encounters.findById(encounterId);
+  if (!encounter) throw notFound('Encounter not found');
+
+  const clinician = await repositories.clinicians.findById(clinicianId);
+  if (!clinician) throw notFound('Clinician not found');
+
+  if (!WAITING_STATUSES.includes(encounter.status)) {
+    const error = new Error(`${encounter.displayRef} has already left the queue (${encounter.status}).`);
+    error.status = 409;
+    throw error;
+  }
+
+  const alreadyPromoted = Boolean(encounter.queue?.manualPromotion);
+
+  if (release && !alreadyPromoted) {
+    const error = new Error(`${encounter.displayRef} is not currently promoted.`);
+    error.status = 409;
+    throw error;
+  }
+  if (!release && alreadyPromoted) {
+    const error = new Error(`${encounter.displayRef} is already at the front of the queue.`);
+    error.status = 409;
+    throw error;
+  }
+
+  if (!release && !PROMOTION_REASONS.includes(reasonCode)) {
+    const error = new Error(`A promotion needs one of: ${PROMOTION_REASONS.join(', ')}.`);
+    error.status = 400;
+    throw error;
+  }
+
+  if (release && (reasonText ?? '').trim().length < PROMOTION_MIN_REASON_LENGTH) {
+    const error = new Error(
+      `Releasing a promotion returns ${encounter.displayRef} to the normal queue and needs at least ${PROMOTION_MIN_REASON_LENGTH} characters explaining why.`,
+    );
+    error.status = 400;
+    throw error;
+  }
+
+  const waitedMinutes =
+    (Date.now() - new Date(encounter.queue?.lastInformedAt ?? encounter.arrivalAt).getTime()) / 60000;
+
+  // Audit first. If this throws, the queue order is unchanged.
+  const auditEvent = await recordQueuePromotion({
+    clinician,
+    encounter,
+    released: release,
+    reasonCode,
+    reasonText,
+    waitedMinutes,
+    session,
+  });
+
+  const now = new Date();
+  const promotion = release
+    ? null
+    : {
+        promotedAt: now,
+        clinicianRef: clinician._id,
+        clinicianName: clinician.name,
+        registrationNumber: clinician.registrationNumber,
+        reasonCode,
+        reasonText: reasonText?.trim() || undefined,
+      };
+
+  const protocol = getActiveProtocol();
+  const state = computeQueueState({
+    encounter: { ...encounter, queue: { ...(encounter.queue ?? {}), manualPromotion: promotion } },
+    protocol,
+  });
+
+  const updated = await repositories.encounters.updateById(encounter._id, {
+    'queue.manualPromotion': promotion,
+    'queue.priorityScore': state.priorityScore,
+  });
+
+  return { encounter: updated, auditEvent, promoted: !release, priorityScore: state.priorityScore };
 }
 
 /** Score without persisting — used by the demo scripts and what-if tooling. */

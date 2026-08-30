@@ -1,12 +1,20 @@
 import { Router } from 'express';
 import { repositories } from '../db/index.js';
-import { ENCOUNTER_STATUS, OVERRIDE_REASONS, TRIAGE_TRIGGER, resolveAgeBand } from '../clinical/constants.js';
+import {
+  ENCOUNTER_STATUS,
+  OVERRIDE_REASONS,
+  PROMOTION_REASONS,
+  TRIAGE_TRIGGER,
+  resolveAgeBand,
+} from '../clinical/constants.js';
 import { getActiveProtocol } from '../services/protocolService.js';
 import {
   CLEARING_STATUSES,
   DISPOSITION_MIN_REASON_LENGTH,
+  PROMOTION_MIN_REASON_LENGTH,
   applyDisposition,
   applyOverride,
+  applyQueuePromotion,
   scoreAndPersist,
 } from '../services/triageService.js';
 import { extractSymptoms, fetchModelInfo } from '../services/mlClient.js';
@@ -298,6 +306,44 @@ export function triageRoutes() {
         encounter: result.encounter,
         status: result.encounter.status,
         waitedMinutes: result.waitedMinutes,
+        auditSeq: result.auditEvent.seq,
+        auditHash: result.auditEvent.hash,
+      });
+    }),
+  );
+
+  // -------------------------------------------------------------- promotion
+
+  router.get('/promotion/reasons', (req, res) => {
+    res.json({
+      reasons: PROMOTION_REASONS,
+      friction: {
+        promote: { reasonCodeRequired: true, reasonTextRequired: false },
+        release: { reasonTextRequired: true, minReasonLength: PROMOTION_MIN_REASON_LENGTH },
+      },
+      // Published so a client cannot present this as something it is not.
+      note: 'Promotion changes queue position only. The recorded ESI is unchanged.',
+    });
+  });
+
+  router.post(
+    '/encounters/:id/promote',
+    asyncRoute(async (req, res) => {
+      const { clinicianId, reasonCode, reasonText, release } = req.body ?? {};
+
+      const result = await applyQueuePromotion({
+        encounterId: req.params.id,
+        clinicianId,
+        reasonCode,
+        reasonText,
+        release: Boolean(release),
+        session: sessionFrom(req),
+      });
+
+      return res.json({
+        encounter: result.encounter,
+        promoted: result.promoted,
+        priorityScore: result.priorityScore,
         auditSeq: result.auditEvent.seq,
         auditHash: result.auditEvent.hash,
       });

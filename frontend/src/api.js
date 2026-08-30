@@ -32,6 +32,10 @@ export const api = {
   override: (encounterId, payload) =>
     request(`/encounters/${encounterId}/override`, { method: 'POST', body: JSON.stringify(payload) }),
 
+  promotionReasons: () => request('/promotion/reasons'),
+  promote: (encounterId, payload) =>
+    request(`/encounters/${encounterId}/promote`, { method: 'POST', body: JSON.stringify(payload) }),
+
   dispositionOptions: () => request('/disposition/options'),
   disposition: (encounterId, payload) =>
     request(`/encounters/${encounterId}/disposition`, { method: 'POST', body: JSON.stringify(payload) }),

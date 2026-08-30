@@ -78,5 +78,3 @@ export const config = {
     auditRetentionYears: int(process.env.AUDIT_RETENTION_YEARS, 7),
   },
 };
-
-export const isMemoryDriver = () => config.db.driver === 'memory';

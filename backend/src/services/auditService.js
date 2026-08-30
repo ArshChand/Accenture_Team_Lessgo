@@ -549,6 +549,65 @@ export async function recordStatusChange({
   });
 }
 
+/**
+ * A nurse moving a patient up the queue by hand, or releasing that promotion.
+ *
+ * Logged for the same reason an override is: it changes who gets care first, and
+ * a decision that changes who gets care first has to be attributable. It records
+ * the position the patient held before, so a reviewer can see how far they were
+ * moved, and the standing ESI at the time — which is what makes the interesting
+ * question answerable later: was the assistant wrong about this patient, or did
+ * something happen in the waiting room that it had no way to see?
+ *
+ * A department that finds itself promoting the same presentation over and over
+ * is looking at a gap in the rules, and this is the record that surfaces it.
+ */
+export async function recordQueuePromotion({
+  clinician,
+  encounter,
+  released = false,
+  reasonCode,
+  reasonText,
+  waitedMinutes,
+  session = {},
+}) {
+  return appendAuditEvent({
+    eventType: AUDIT_EVENT_TYPE.QUEUE_MANUAL_PROMOTION,
+    actor: {
+      clinicianRef: clinician._id,
+      name: clinician.name,
+      role: clinician.role,
+      registrationNumber: clinician.registrationNumber,
+      sessionId: session.sessionId,
+      workstation: session.workstation,
+      ipAddress: session.ipAddress,
+    },
+    subject: {
+      encounterRef: encounter._id,
+      patientRef: encounter.patientRef,
+      displayRef: encounter.displayRef,
+    },
+    before: {
+      esi: encounter.currentESI,
+      priorityScore: encounter.queue?.priorityScore,
+      promoted: Boolean(encounter.queue?.manualPromotion),
+      decayStatus: encounter.queue?.decayStatus,
+    },
+    after: {
+      promoted: !released,
+      action: released ? 'released' : 'promoted',
+      // The ESI is deliberately unchanged by this act; recording it makes that
+      // explicit to anyone reading the trail rather than merely implied.
+      esi: encounter.currentESI,
+      waitedMinutes: Number.isFinite(waitedMinutes) ? Math.round(waitedMinutes) : undefined,
+    },
+    reasonCode: reasonCode ?? undefined,
+    reasonText: reasonText?.trim() || undefined,
+    purpose: 'clinical_care',
+    retentionClass: RETENTION_CLASS.CLINICAL_AUDIT,
+  });
+}
+
 /** A safe waiting time exceeded. Evidence, recorded whether or not anyone acted. */
 export async function recordWaitBreach({ encounter, safeWaitMinutes, waitedMinutes }) {
   return appendAuditEvent({

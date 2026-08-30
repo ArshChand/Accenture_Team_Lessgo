@@ -29,12 +29,36 @@ export default function App() {
 
   const bumpRefresh = useCallback(() => setRefreshToken((n) => n + 1), []);
 
-  useEffect(() => {
-    api
-      .clinicians()
-      .then(({ clinicians: rows }) => setClinicians(rows))
-      .catch(() => setClinicians([]));
+  const loadClinicians = useCallback(async () => {
+    try {
+      const { clinicians: rows } = await api.clinicians();
+      setClinicians(rows ?? []);
+    } catch {
+      setClinicians([]);
+    }
   }, []);
+
+  useEffect(() => {
+    loadClinicians();
+  }, [loadClinicians]);
+
+  /**
+   * Staff can arrive after the dashboard is already open — the documented demo
+   * flow does exactly that, starting the servers, opening the board, and only
+   * then seeding from a second terminal. Patients show up regardless because the
+   * queue is live over the socket, but a one-shot roster fetch left every
+   * clinician dropdown empty until someone thought to reload, which reads as
+   * "the resolve flow is broken" rather than "the roster loaded too early".
+   *
+   * Retry only while the roster is empty. The condition stops being true the
+   * moment it populates, so this costs one small request every few seconds on a
+   * department with no staff on file and nothing at all once there is.
+   */
+  useEffect(() => {
+    if (clinicians.length > 0) return undefined;
+    const timer = setInterval(loadClinicians, 5000);
+    return () => clearInterval(timer);
+  }, [clinicians.length, loadClinicians]);
 
   useEffect(() => {
     if (theme === 'system') document.documentElement.removeAttribute('data-theme');
@@ -60,6 +84,14 @@ export default function App() {
     setTab('board');
     setSelectedId(encounterId);
   };
+
+  // A promotion reorders the board but keeps the patient on it, so unlike a
+  // resolve the selection is deliberately preserved — the nurse who just moved
+  // someone should still be looking at them afterwards.
+  const handleQueueChanged = useCallback(async () => {
+    await queue.refresh();
+    bumpRefresh();
+  }, [queue, bumpRefresh]);
 
   // A resolved patient leaves the board, so the selection has to go with them —
   // otherwise the detail panel keeps showing an encounter that is no longer in
@@ -137,6 +169,7 @@ export default function App() {
                     encounterId={selectedId}
                     onOverride={openOverride}
                     onResolved={handleResolved}
+                    onQueueChanged={handleQueueChanged}
                     clinicians={clinicians}
                     refreshToken={refreshToken}
                   />

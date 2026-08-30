@@ -197,6 +197,47 @@
   padding-top: var(--sp-3);
 }
 
+/* ------------------------------------------------------- promotion banner */
+
+/**
+ * Accent-coloured, not status-coloured. A promotion is a human decision about
+ * ordering, not a clinical severity, and borrowing a status role here would
+ * imply the patient got sicker — which is exactly the confusion the whole
+ * position/severity split exists to prevent.
+ */
+.detail__promoted {
+  padding: var(--sp-3);
+  border: 1px solid var(--accent);
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-wash);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.detail__promoted-by {
+  color: var(--ink-secondary);
+  margin-top: 2px;
+}
+
+.detail__promoted-note {
+  margin: var(--sp-2) 0 0;
+  padding-left: var(--sp-2);
+  border-left: 2px solid var(--hairline-strong);
+  color: var(--ink-secondary);
+}
+
+.detail__promoted-note-esi {
+  margin-top: var(--sp-2);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+
+.detail__release {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
 /* ----------------------------------------------------------- resolve panel */
 
 .resolve {
