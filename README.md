@@ -191,7 +191,7 @@ that kills, and it is the number this system is tuned against. Over-triage of
 40.7% is the price, and it is a deliberate one.
 
 Full analysis, including where the system is weakest and a decision we got wrong
-and reversed: [`docs/safety-case.md`](docs/safety-case.md).
+and reversed: [`docs/safety-case.md`](https://github.com/ArshChand/Accenture_Team_Lessgo/blob/main/docs/safety-case.md).
 
 ---
 
@@ -212,11 +212,11 @@ docs/             architecture · data model · safety case · compliance
 
 | Document | |
 |---|---|
-| [Architecture](docs/architecture.md) | services, scoring path, queue engine, degradation |
-| [Data model](docs/data-model.md) | collections, provenance, confidence |
-| [Safety case](docs/safety-case.md) | measured performance, operating point, limitations |
-| [Compliance](docs/compliance.md) | DPDP 2023 + ABDM, with HIPAA/GDPR mapping |
-| [Adoption](docs/adoption.md) | why the interaction design doesn't manufacture its own workarounds |
+| [Architecture](https://github.com/ArshChand/Accenture_Team_Lessgo/blob/main/docs/architecture.md)| services, scoring path, queue engine, degradation |
+| [Data model](https://github.com/ArshChand/Accenture_Team_Lessgo/blob/main/docs/data-model.md) | collections, provenance, confidence |
+| [Safety case](https://github.com/ArshChand/Accenture_Team_Lessgo/blob/main/docs/safety-case.md) | measured performance, operating point, limitations |
+| [Compliance](https://github.com/ArshChand/Accenture_Team_Lessgo/blob/main/docs/compliance.md) | DPDP 2023 + ABDM, with HIPAA/GDPR mapping |
+| [Adoption](https://github.com/ArshChand/Accenture_Team_Lessgo/blob/main/docs/adoption.md) | why the interaction design doesn't manufacture its own workarounds |
 
 ---
 
