@@ -77,8 +77,7 @@ training seed), scored through the real rule engine, the real model over HTTP,
 and the real fusion code. Reproduce with:
 
 ```bash
-cd ml-service && python3 -m app.export_eval_set 1500
-cd backend    && node scripts/evaluateFusion.js
+npm run evaluate
 ```
 
 Full output in [`fusion-evaluation.json`](./fusion-evaluation.json).
@@ -290,7 +289,7 @@ npm install
 npm run dev                    # backend :4000, frontend :5173, ML :8000
 
 npm test                       # 189 backend tests
-cd ml-service && python3 -m pytest tests/ -q     # 47 tests
+npm run test:ml                # 47 ML-service tests
 
 npm run seed                   # 20 curated patients, self-checked
 npm run demo:surge             # 3x volume

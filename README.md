@@ -204,7 +204,7 @@ docs/             architecture · data model · safety case · compliance
 
 ```bash
 npm test                                          # 189 backend tests
-cd ml-service && python3 -m pytest tests/ -q      # 47 tests
+npm run test:ml                                   # 47 ML-service tests
 ```
 
 The interesting ones are written as clinical claims a reviewer could disagree
