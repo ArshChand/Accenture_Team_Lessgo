@@ -21,6 +21,21 @@
   overflow: hidden;
 }
 
+/**
+ * The board's four sub-tabs stay mounted and are toggled with the native
+ * `hidden` attribute rather than unmounted (see App.jsx) — that's what lets
+ * a half-typed search query or an in-progress action survive a tab switch.
+ * But `hidden`'s default `display: none` is only as specific as any class
+ * selector, and several of these panels set their own `display` (grid, flex)
+ * at that same specificity — author rules win ties over the UA stylesheet,
+ * so without this, a hidden panel would render anyway, stacked on top of
+ * whichever tab is actually showing. `!important` here is deliberate: this
+ * has to win regardless of what layout the element declares for itself.
+ */
+[hidden] {
+  display: none !important;
+}
+
 /* ------------------------------------------------------------------- header */
 
 .app__header {
@@ -175,6 +190,21 @@
   border-radius: var(--radius-pill);
   border: 3px solid transparent;
   background-clip: padding-box;
+}
+
+/* The Metrics, Alerts and Capacity board tabs — a single scrolling column,
+   same fixed-viewport-scrolls-internally rule as the queue itself, and
+   capped to a comfortable reading width rather than stretching a handful of
+   tiles or a short alert list across the full board. */
+.board-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 .app__placeholder {

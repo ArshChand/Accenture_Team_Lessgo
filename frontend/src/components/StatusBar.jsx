@@ -2,8 +2,22 @@ import { formatWait } from './clinical.jsx';
 import './StatusBar.css';
 
 /**
- * Department-level state: the surge banner, the stat row, and the transport
- * indicator.
+ * Department-level state, split into three pieces of deliberately different
+ * visibility:
+ *
+ *   SafetySummary — the surge banner plus the two numbers that must never be
+ *   a click away: how many are waiting, and how many have exceeded their
+ *   safe wait. This renders above the board-tab strip, regardless of which
+ *   tab is active, so tucking the rest of the metrics into their own tab
+ *   never means a breach can go unnoticed.
+ *
+ *   MetricsGrid — the full stat grid (the six-tile bento view this used to
+ *   be in its entirety). Lives in the "Metrics" tab now that the two
+ *   safety-critical numbers above have their own permanent home.
+ *
+ *   CapacityPanel — bed availability and connection status, the two figures
+ *   that describe the department's *capacity* rather than any one patient's
+ *   urgency. Lives in the "Capacity" tab.
  *
  * These are stat tiles rather than charts on purpose. Each number answers a
  * single question a charge nurse asks between patients — how many are waiting,
@@ -22,25 +36,21 @@ const TRANSPORT_COPY = {
   connecting: { label: 'Connecting', detail: 'Establishing live connection', status: 'neutral' },
 };
 
-export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, lastUpdateAt, beds, bedsUnreachable }) {
-  const waiting = encounters.length;
-  const breached = encounters.filter((e) => e.queue?.decayStatus === 'red').length;
-  const approaching = encounters.filter((e) => e.queue?.decayStatus === 'amber').length;
-  const highAcuity = encounters.filter((e) => (e.currentESI ?? 5) <= 2).length;
-  const lowConfidence = encounters.filter((e) => e.currentConfidence?.band === 'low').length;
+export function computeQueueStats(encounters) {
+  return {
+    waiting: encounters.length,
+    breached: encounters.filter((e) => e.queue?.decayStatus === 'red').length,
+    approaching: encounters.filter((e) => e.queue?.decayStatus === 'amber').length,
+    highAcuity: encounters.filter((e) => (e.currentESI ?? 5) <= 2).length,
+    lowConfidence: encounters.filter((e) => e.currentConfidence?.band === 'low').length,
+  };
+}
 
-  const conn = TRANSPORT_COPY[transport] ?? TRANSPORT_COPY.connecting;
-
-  // Read-only context from the hospital's own bed-management system — never a
-  // scoring input, so its own unreachability is reported as "unknown", not as
-  // anything that touches the assistant's confidence in a triage decision.
-  const bedTotals = beds?.departments?.reduce(
-    (acc, dept) => ({ available: acc.available + dept.available, capacity: acc.capacity + dept.capacity }),
-    { available: 0, capacity: 0 },
-  );
+export function SafetySummary({ encounters, surge }) {
+  const { waiting, breached } = computeQueueStats(encounters);
 
   return (
-    <div className="statusbar">
+    <div className="safety-summary">
       {surge.active && (
         <div className="surge" role="status">
           <span className="surge__tag">Surge</span>
@@ -65,47 +75,77 @@ export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, l
         </div>
       )}
 
-      <div className="stats">
-        <Stat label="Waiting" value={waiting} hint="Currently on the board" />
-        {/*
-          The bento grid's one adaptive cell: this tile grows and takes the glow
-          only once there is something in it to be urgent about. A dashboard that
-          is always dramatic stops reading as dramatic — the emphasis has to be
-          earned by the number, not applied by the layout.
-        */}
-        <Stat
-          label="Safe wait exceeded"
-          value={breached}
-          status={breached > 0 ? 'critical' : 'neutral'}
-          hero={breached > 0}
-          hint={breached > 0 ? 'Needs attention now' : 'All within limits'}
-        />
-        <Stat
-          label="Approaching limit"
-          value={approaching}
-          status={approaching > 0 ? 'warning' : 'neutral'}
-          hint={approaching > 0 ? 'Past 60% of safe wait' : 'None near a limit'}
-        />
-        <Stat
-          label="High acuity"
-          value={highAcuity}
-          status={highAcuity > 0 ? 'serious' : 'neutral'}
-          hint="ESI 1–2"
-        />
-        <Stat
-          label="Low confidence"
-          value={lowConfidence}
-          status={lowConfidence > 0 ? 'warning' : 'neutral'}
-          hint="Assistant unsure — already escalated"
-        />
-        <Stat
-          label="Capacity debt"
-          value={formatWait(capacityDebtMinutes)}
-          status={capacityDebtMinutes > 0 ? 'warning' : 'neutral'}
-          hint="Minutes owed past safe waits"
-        />
+      <div className="safety-summary__row">
+        <span className="safety-summary__item">
+          <span className="safety-summary__value tabular">{waiting}</span>
+          <span className="safety-summary__label">waiting</span>
+        </span>
+        <span className="safety-summary__divider" aria-hidden="true" />
+        <span className={`safety-summary__item ${breached > 0 ? 'is-critical' : ''}`}>
+          <span className="safety-summary__value tabular">{breached}</span>
+          <span className="safety-summary__label">safe wait exceeded</span>
+        </span>
+        {breached > 0 && <span className="safety-summary__flag">needs attention now</span>}
       </div>
+    </div>
+  );
+}
 
+export function MetricsGrid({ encounters, capacityDebtMinutes }) {
+  const { waiting, breached, approaching, highAcuity, lowConfidence } = computeQueueStats(encounters);
+
+  return (
+    <div className="stats">
+      <Stat label="Waiting" value={waiting} hint="Currently on the board" />
+      {/*
+        The bento grid's one adaptive cell: this tile grows and takes the glow
+        only once there is something in it to be urgent about. A dashboard that
+        is always dramatic stops reading as dramatic — the emphasis has to be
+        earned by the number, not applied by the layout.
+      */}
+      <Stat
+        label="Safe wait exceeded"
+        value={breached}
+        status={breached > 0 ? 'critical' : 'neutral'}
+        hero={breached > 0}
+        hint={breached > 0 ? 'Needs attention now' : 'All within limits'}
+      />
+      <Stat
+        label="Approaching limit"
+        value={approaching}
+        status={approaching > 0 ? 'warning' : 'neutral'}
+        hint={approaching > 0 ? 'Past 60% of safe wait' : 'None near a limit'}
+      />
+      <Stat label="High acuity" value={highAcuity} status={highAcuity > 0 ? 'serious' : 'neutral'} hint="ESI 1–2" />
+      <Stat
+        label="Low confidence"
+        value={lowConfidence}
+        status={lowConfidence > 0 ? 'warning' : 'neutral'}
+        hint="Assistant unsure — already escalated"
+      />
+      <Stat
+        label="Capacity debt"
+        value={formatWait(capacityDebtMinutes)}
+        status={capacityDebtMinutes > 0 ? 'warning' : 'neutral'}
+        hint="Minutes owed past safe waits"
+      />
+    </div>
+  );
+}
+
+export function CapacityPanel({ transport, lastUpdateAt, beds, bedsUnreachable, capacityDebtMinutes }) {
+  const conn = TRANSPORT_COPY[transport] ?? TRANSPORT_COPY.connecting;
+
+  // Read-only context from the hospital's own bed-management system — never a
+  // scoring input, so its own unreachability is reported as "unknown", not as
+  // anything that touches the assistant's confidence in a triage decision.
+  const bedTotals = beds?.departments?.reduce(
+    (acc, dept) => ({ available: acc.available + dept.available, capacity: acc.capacity + dept.capacity }),
+    { available: 0, capacity: 0 },
+  );
+
+  return (
+    <div className="capacity-panel">
       <div className="stats stats--context">
         <div className={`stat stat--conn stat--${conn.status}`}>
           <div className="stat__label">Connection</div>
@@ -130,11 +170,43 @@ export function StatusBar({ encounters, surge, transport, capacityDebtMinutes, l
           <div className="stat__value stat__value--sm">
             {bedsUnreachable ? '—' : bedTotals ? `${bedTotals.available}/${bedTotals.capacity}` : '…'}
           </div>
-          <div className="stat__hint">
-            {bedsUnreachable ? 'Bed system unreachable' : 'Across all departments'}
-          </div>
+          <div className="stat__hint">{bedsUnreachable ? 'Bed system unreachable' : 'Across all departments'}</div>
         </div>
+
+        <Stat
+          label="Capacity debt"
+          value={formatWait(capacityDebtMinutes)}
+          status={capacityDebtMinutes > 0 ? 'warning' : 'neutral'}
+          hint="Minutes owed past safe waits, summed"
+        />
       </div>
+
+      {beds?.departments?.length > 0 && (
+        <div className="capacity-panel__depts">
+          <h3>By department</h3>
+          <table className="capacity-panel__table">
+            <thead>
+              <tr>
+                <th scope="col">Department</th>
+                <th scope="col">Occupied</th>
+                <th scope="col">Available</th>
+              </tr>
+            </thead>
+            <tbody>
+              {beds.departments.map((dept) => (
+                <tr key={dept.name}>
+                  <td>{dept.name}</td>
+                  <td className="tabular">
+                    {dept.occupied} / {dept.capacity}
+                  </td>
+                  <td className={`tabular ${dept.available === 0 ? 'is-critical' : ''}`}>{dept.available}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="capacity-panel__source">{beds.source}</p>
+        </div>
+      )}
     </div>
   );
 }

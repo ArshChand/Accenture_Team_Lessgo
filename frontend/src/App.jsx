@@ -4,7 +4,8 @@ import { useQueue } from './hooks/useQueue.js';
 import { QueueBoard } from './components/QueueBoard.jsx';
 import { PatientDetail } from './components/PatientDetail.jsx';
 import { OverrideModal } from './components/OverrideModal.jsx';
-import { StatusBar } from './components/StatusBar.jsx';
+import { SafetySummary, MetricsGrid, CapacityPanel, computeQueueStats } from './components/StatusBar.jsx';
+import { BoardTabs } from './components/BoardTabs.jsx';
 import { AlertFeed } from './components/AlertFeed.jsx';
 import { AuditViewer } from './components/AuditViewer.jsx';
 import { IntakeKiosk } from './components/IntakeKiosk.jsx';
@@ -21,6 +22,7 @@ const TABS = [
 export default function App() {
   const queue = useQueue();
   const [tab, setTab] = useState('board');
+  const [boardSubTab, setBoardSubTab] = useState('queue');
   const [selectedId, setSelectedId] = useState(null);
   const [clinicians, setClinicians] = useState([]);
   const [overrideTarget, setOverrideTarget] = useState(null);
@@ -105,8 +107,12 @@ export default function App() {
     bumpRefresh();
   };
 
+  // An alert can be clicked from the Alerts tab itself, so this has to land
+  // the nurse on the Queue tab too — otherwise "select a patient" would
+  // appear to do nothing, still sitting on the tab the click came from.
   const selectFromAlert = (encounterId) => {
     setTab('board');
+    setBoardSubTab('queue');
     setSelectedId(encounterId);
   };
 
@@ -168,17 +174,23 @@ export default function App() {
       <main className={`app__main ${tab === 'board' ? 'app__main--board' : ''}`}>
         {tab === 'board' && (
           <>
-            <StatusBar
-              encounters={queue.encounters}
-              surge={queue.surge}
-              transport={queue.transport}
-              capacityDebtMinutes={queue.capacityDebtMinutes}
-              lastUpdateAt={queue.lastUpdateAt}
-              beds={beds}
-              bedsUnreachable={bedsUnreachable}
+            <SafetySummary encounters={queue.encounters} surge={queue.surge} />
+
+            <BoardTabs
+              active={boardSubTab}
+              onChange={setBoardSubTab}
+              alertCount={queue.alerts.length}
+              breachedCount={computeQueueStats(queue.encounters).breached}
             />
 
-            <div className="app__board-layout">
+            {/*
+              All four sub-views stay mounted and are only ever hidden, never
+              unmounted, on tab switch. QueueBoard carries its own local search
+              query and PatientDetail can carry a half-filled promote/override
+              form — conditionally rendering them out of the tree on every tab
+              change would silently reset both the moment a nurse looked away.
+            */}
+            <div hidden={boardSubTab !== 'queue'} className="app__board-layout">
               <div className="app__board-main">
                 <QueueBoard
                   encounters={queue.encounters}
@@ -190,7 +202,6 @@ export default function App() {
               </div>
 
               <div className="app__board-side">
-                <AlertFeed alerts={queue.alerts} onSelect={selectFromAlert} onDismiss={queue.dismissAlert} />
                 {selectedId ? (
                   <PatientDetail
                     encounterId={selectedId}
@@ -204,6 +215,24 @@ export default function App() {
                   <div className="app__placeholder">Select a patient to see why the assistant scored them.</div>
                 )}
               </div>
+            </div>
+
+            <div hidden={boardSubTab !== 'metrics'} className="board-panel">
+              <MetricsGrid encounters={queue.encounters} capacityDebtMinutes={queue.capacityDebtMinutes} />
+            </div>
+
+            <div hidden={boardSubTab !== 'alerts'} className="board-panel">
+              <AlertFeed alerts={queue.alerts} onSelect={selectFromAlert} onDismiss={queue.dismissAlert} />
+            </div>
+
+            <div hidden={boardSubTab !== 'capacity'} className="board-panel">
+              <CapacityPanel
+                transport={queue.transport}
+                lastUpdateAt={queue.lastUpdateAt}
+                beds={beds}
+                bedsUnreachable={bedsUnreachable}
+                capacityDebtMinutes={queue.capacityDebtMinutes}
+              />
             </div>
           </>
         )}
