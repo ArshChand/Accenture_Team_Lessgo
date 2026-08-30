@@ -203,3 +203,50 @@
   font-size: var(--text-xs);
   color: var(--ink-secondary);
 }
+
+.kiosk__phone-row {
+  display: flex;
+  gap: 8px;
+}
+
+.kiosk__phone-row input {
+  flex: 1 1 auto;
+}
+
+.kiosk__phone-row .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.kiosk__his {
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.kiosk__his--found {
+  border: 1px solid var(--accent);
+  background: var(--accent-wash);
+}
+
+.kiosk__his--found ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kiosk__his-source {
+  display: block;
+  margin-top: 6px;
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+
+.kiosk__his--miss {
+  margin: 0;
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface-sunken);
+  color: var(--ink-secondary);
+}

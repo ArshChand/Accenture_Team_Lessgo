@@ -48,10 +48,35 @@ export function IntakeKiosk({ onArrival }) {
   const [listening, setListening] = useState(false);
   const [age, setAge] = useState('58');
   const [complaint, setComplaint] = useState('');
+  const [phone, setPhone] = useState('');
+  const [hisMatch, setHisMatch] = useState(null);
+  const [hisLookupState, setHisLookupState] = useState('idle'); // idle | checking | found | not_found | error
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const recognitionRef = useRef(null);
+
+  /**
+   * Half of arrivals have some prior record, per the brief's own assumption —
+   * but "prior record" usually means the *hospital's* record, not this app's.
+   * A patient can be a complete stranger to TriageHandler and a known quantity
+   * to the hospital's own HIS. This looks the hospital's system up directly
+   * rather than only checking our own database, and is read-only: it informs
+   * intake with baselines and chronic conditions, it never writes anything
+   * back and never touches a score by itself.
+   */
+  const checkHospitalRecord = async () => {
+    if (!phone.trim()) return;
+    setHisLookupState('checking');
+    setHisMatch(null);
+    try {
+      const { found, record } = await api.hisLookup({ phone: phone.trim() });
+      setHisMatch(found ? record : null);
+      setHisLookupState(found ? 'found' : 'not_found');
+    } catch {
+      setHisLookupState('error');
+    }
+  };
 
   const startListening = () => {
     if (!SpeechRecognition) return;
@@ -95,7 +120,18 @@ export function IntakeKiosk({ onArrival }) {
       const { patient } = await api.createPatient({
         displayRef: ref,
         preferredLanguage: language,
-        hasPriorRecord: false,
+        hasPriorRecord: Boolean(hisMatch),
+        ...(hisMatch && {
+          identity: { phone: phone.trim(), fullName: hisMatch.fullName },
+          baselines: {
+            systolicBP: hisMatch.baselineSBP,
+            heartRate: hisMatch.baselineHR,
+            spo2: hisMatch.baselineSpO2,
+          },
+          chronicConditions: hisMatch.chronicConditions,
+          allergies: hisMatch.allergies,
+          medications: hisMatch.medications,
+        }),
       });
 
       const { encounter } = await api.createEncounter({
@@ -112,6 +148,9 @@ export function IntakeKiosk({ onArrival }) {
       onArrival?.(String(encounter._id));
       setTranscript('');
       setComplaint('');
+      setPhone('');
+      setHisMatch(null);
+      setHisLookupState('idle');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -192,6 +231,60 @@ export function IntakeKiosk({ onArrival }) {
             />
           </label>
         </div>
+
+        <label className="field">
+          <span className="field__label">Phone number (optional)</span>
+          <div className="kiosk__phone-row">
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                setHisMatch(null);
+                setHisLookupState('idle');
+              }}
+              placeholder="for checking the hospital's own record"
+            />
+            <button
+              type="button"
+              className="btn"
+              onClick={checkHospitalRecord}
+              disabled={!phone.trim() || hisLookupState === 'checking'}
+            >
+              {hisLookupState === 'checking' ? 'Checking…' : 'Check hospital record'}
+            </button>
+          </div>
+          <span className="field__hint">
+            Looks up the hospital's own patient record system — separate from this app's database, and
+            read-only. A match pre-fills baselines and chronic conditions the assistant can use; nothing
+            is written back.
+          </span>
+        </label>
+
+        {hisLookupState === 'found' && hisMatch && (
+          <div className="kiosk__his kiosk__his--found">
+            <strong>{hisMatch.fullName}</strong>, {hisMatch.ageYears}y — known to the hospital's system
+            <ul>
+              {hisMatch.chronicConditions?.length > 0 && <li>Chronic: {hisMatch.chronicConditions.join(', ')}</li>}
+              {hisMatch.allergies?.length > 0 && <li>Allergies: {hisMatch.allergies.join(', ')}</li>}
+              <li>
+                Baseline: SBP {hisMatch.baselineSBP} · HR {hisMatch.baselineHR} · SpO2 {hisMatch.baselineSpO2}%
+              </li>
+              <li>Last visit {hisMatch.lastVisit}</li>
+            </ul>
+            <span className="kiosk__his-source">{hisMatch.source}</span>
+          </div>
+        )}
+        {hisLookupState === 'not_found' && (
+          <p className="kiosk__his kiosk__his--miss">
+            No record for this number in the hospital's system. Registering as a first-time patient.
+          </p>
+        )}
+        {hisLookupState === 'error' && (
+          <p className="kiosk__his kiosk__his--miss">
+            The hospital's record system did not respond. Continuing without it — this never blocks intake.
+          </p>
+        )}
 
         <button type="submit" className="btn btn--primary" disabled={busy || (!transcript && !complaint)}>
           {busy ? 'Registering…' : 'Join the queue'}

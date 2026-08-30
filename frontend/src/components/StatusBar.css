@@ -100,18 +100,21 @@
 /* ---------------------------------------------------------------- stat tiles */
 
 /**
- * A bento grid: seven cells on a shared baseline, one of which — the tile that
- * is actually the emergency — claims a second *column* exactly when it has
+ * A bento grid of the clinical KPI tiles, one of which — the tile that is
+ * actually the emergency — claims a second *column* exactly when it has
  * something to claim it for. `grid-auto-flow: dense` lets the tiles after it
  * re-pack around the gap instead of leaving a hole.
  *
  * Width only, never height. An earlier version also spanned two rows, which
  * looked right in isolation and wrong in place: at a normal desktop width all
- * seven tiles already fit on a single row, so the row the hero was reaching
+ * the tiles already fit on a single row, so the row the hero was reaching
  * into did not otherwise exist. The grid grew a second row that only ever
  * contained the hero, leaving it stretched to roughly double the height of its
  * neighbours with dead space alongside. Spanning columns keeps the emphasis and
  * keeps every tile on one baseline.
+ *
+ * Connection and bed availability are deliberately not tiles in this grid —
+ * see `.stats--context` below.
  */
 .stats {
   display: grid;
@@ -119,6 +122,22 @@
   grid-auto-rows: 1fr;
   grid-auto-flow: dense;
   gap: var(--sp-3);
+}
+
+/**
+ * Bed availability and connection status are both context, not a clinical
+ * alert — neither ever earns the hero treatment or a critical colour, so they
+ * do not belong in the six-tile row above competing for the same width budget
+ * (that row's tiles were sized assuming six, and an unrelated seventh squeezed
+ * in was truncating "Approaching limit" before the number even mattered).
+ * A second, shorter row for exactly the "how is the system doing" tiles keeps
+ * both rows honestly sized for what they actually hold.
+ */
+.stats--context {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
 }
 
 .stat {
