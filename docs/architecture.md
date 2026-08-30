@@ -95,6 +95,12 @@ Priority reorders **within** an ESI level, never across one: the weights are set
 so a fresh ESI 2 still outranks a badly overdue ESI 4. Decay changes who is seen
 first among equals; it does not change how urgent anyone is.
 
+A nurse can also add a flat `MANUAL_PROMOTION_BONUS` (100,000) on top of
+`priorityScore` — chosen to exceed the entire computed range, so a promoted
+patient always sorts first regardless of anyone else's severity or wait. This
+changes only where the patient sits in the queue: `currentESI` and `assignedBy`
+are untouched, and the bonus is stripped the moment the promotion is released.
+
 `minutesWaiting` is measured from `queue.lastInformedAt` — the last time something
 genuinely new was learned — not from the last time the system looked. An automated
 re-score triggered by decay learns nothing new, so it must not reset the clock; if

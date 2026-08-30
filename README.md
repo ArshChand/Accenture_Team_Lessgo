@@ -81,6 +81,10 @@ npm run demo:override   # override friction and the audit trail
    instead: it demands a reason code, twenty characters of justification, and an
    attestation. Every refusal comes from the server, not the dialog.
 
+5b. **Move someone to the front of the queue** — a nurse-only reordering, with
+   its own reason codes and a banner that spells out what did and did not
+   change: the ESI stays exactly what the assistant scored.
+
 6. **Audit trail → Verify chain integrity** — walks every event and recomputes its
    hash.
 
@@ -143,6 +147,15 @@ seconds. Each level declares itself rather than degrading silently.
 Guardrails — safe-wait ceilings, the escalation floor, undisablable rules — are
 *not* configurable, and an invalid protocol refuses to start the service.
 
+**Manual queue promotion.** A nurse can move a patient to the front of the queue
+for something the model can never see from a snapshot — visible deterioration in
+the waiting room, family or staff escalation, clinical gestalt. Promotion changes
+*ordering only*: the recorded ESI, and who assigned it, never change, and the
+patient detail view says so explicitly. It is promote-only (no manual demotion)
+and holds until a clinician releases it, which — mirroring the override
+asymmetry — requires a reason and twenty characters of justification, the same
+friction a de-escalation demands.
+
 ---
 
 ## Measured performance
@@ -190,7 +203,7 @@ docs/             architecture · data model · safety case · compliance
 ## Tests
 
 ```bash
-npm test                                          # 169 backend tests
+npm test                                          # 189 backend tests
 cd ml-service && python3 -m pytest tests/ -q      # 47 tests
 ```
 
