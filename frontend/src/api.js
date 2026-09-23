@@ -59,6 +59,11 @@ export const api = {
 
   advanceTime: (payload) => request('/simulate/advance-time', { method: 'POST', body: JSON.stringify(payload) }),
 
+  resourceOverview: () => request('/resources/overview'),
+  adjustStock: (resourceId, delta) =>
+    request(`/resources/inventory/${resourceId}/adjust`, { method: 'POST', body: JSON.stringify({ delta }) }),
+  restock: (resourceId) => request(`/resources/inventory/${resourceId}/restock`, { method: 'POST' }),
+
   bedAvailability: () => request('/integrations/beds'),
   hisLookup: ({ phone, abhaId }) => {
     const query = new URLSearchParams(

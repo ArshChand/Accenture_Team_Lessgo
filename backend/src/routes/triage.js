@@ -20,6 +20,7 @@ import {
 import { extractSymptoms, fetchModelInfo } from '../services/mlClient.js';
 import { recordPhiAccess, verifyAuditChain } from '../services/auditService.js';
 import { safeWaitMinutesWith } from '../clinical/protocol.js';
+import { predictForEncounter } from '../operations/overview.js';
 
 /**
  * HTTP surface for triage.
@@ -170,7 +171,12 @@ export function triageRoutes() {
         { sort: { recordedAt: -1 } },
       );
 
-      return res.json({ encounter, assessments, vitals });
+      return res.json({
+        encounter,
+        assessments,
+        vitals,
+        predictedResources: predictForEncounter(encounter, assessments[0]),
+      });
     }),
   );
 
