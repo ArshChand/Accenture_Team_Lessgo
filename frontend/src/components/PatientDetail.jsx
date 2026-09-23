@@ -71,7 +71,7 @@ export function PatientDetail({
   if (error) return <aside className="detail detail--error">{error}</aside>;
   if (!data) return <aside className="detail detail--loading">Loading…</aside>;
 
-  const { encounter, assessments, vitals } = data;
+  const { encounter, assessments, vitals, predictedResources = [] } = data;
   const latest = assessments?.[0];
   const latestVitals = vitals?.[0];
   const waited = minutesSince(encounter.queue?.lastInformedAt ?? encounter.arrivalAt);
@@ -207,6 +207,26 @@ export function PatientDetail({
           </div>
         )}
       </section>
+
+      {/* Operations view of the same patient: what they are likely to use, and why.
+          Read from the score, never fed back into it. */}
+      {predictedResources.length > 0 && (
+        <section className="detail__section">
+          <h3>Likely resources</h3>
+          <ul className="detail__resources">
+            {predictedResources.slice(0, 6).map((resource) => (
+              <li key={resource.resourceId}>
+                <span className="detail__resource-name">{resource.label}</span>
+                <span className="detail__resource-bar" aria-hidden="true">
+                  <span style={{ width: `${Math.round(resource.likelihood * 100)}%` }} />
+                </span>
+                <span className="tabular detail__resource-pct">{Math.round(resource.likelihood * 100)}%</span>
+                <span className="detail__muted detail__resource-why">{resource.reasons.slice(0, 2).join(' · ')}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {latestVitals && (
         <section className="detail__section">

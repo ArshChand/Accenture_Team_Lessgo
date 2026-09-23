@@ -6,6 +6,7 @@ import { PatientDetail } from './components/PatientDetail.jsx';
 import { OverrideModal } from './components/OverrideModal.jsx';
 import { SafetySummary, MetricsGrid, CapacityPanel, computeQueueStats } from './components/StatusBar.jsx';
 import { BoardTabs } from './components/BoardTabs.jsx';
+import { ResourcesPanel } from './components/ResourcesPanel.jsx';
 import { AlertFeed } from './components/AlertFeed.jsx';
 import { AuditViewer } from './components/AuditViewer.jsx';
 import { IntakeKiosk } from './components/IntakeKiosk.jsx';
@@ -30,6 +31,8 @@ export default function App() {
   const [theme, setTheme] = useState('system');
   const [beds, setBeds] = useState(null);
   const [bedsUnreachable, setBedsUnreachable] = useState(false);
+  const [resourceShortCount, setResourceShortCount] = useState(0);
+  const handleResourceSummary = useCallback(({ shortCount }) => setResourceShortCount(shortCount), []);
 
   const bumpRefresh = useCallback(() => setRefreshToken((n) => n + 1), []);
 
@@ -181,10 +184,11 @@ export default function App() {
               onChange={setBoardSubTab}
               alertCount={queue.alerts.length}
               breachedCount={computeQueueStats(queue.encounters).breached}
+              shortageCount={resourceShortCount}
             />
 
             {/*
-              All four sub-views stay mounted and are only ever hidden, never
+              All sub-views stay mounted and are only ever hidden, never
               unmounted, on tab switch. QueueBoard carries its own local search
               query and PatientDetail can carry a half-filled promote/override
               form — conditionally rendering them out of the tree on every tab
@@ -233,6 +237,10 @@ export default function App() {
                 bedsUnreachable={bedsUnreachable}
                 capacityDebtMinutes={queue.capacityDebtMinutes}
               />
+            </div>
+
+            <div hidden={boardSubTab !== 'resources'} className="board-panel">
+              <ResourcesPanel onSummary={handleResourceSummary} />
             </div>
           </>
         )}
