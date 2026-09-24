@@ -13,6 +13,7 @@ import './AlertFeed.css';
 const ALERT_COPY = {
   wait_breach: { glyph: '▲', status: 'critical', title: 'Safe wait exceeded' },
   deterioration: { glyph: '▲', status: 'critical', title: 'Re-triaged more urgent' },
+  patient_reported_worse: { glyph: '▲', status: 'critical', title: 'Patient says they feel worse' },
 };
 
 export function AlertFeed({ alerts, onSelect, onDismiss }) {
@@ -47,6 +48,12 @@ export function AlertFeed({ alerts, onSelect, onDismiss }) {
                       {' '}
                       · ESI {alert.esi} · waited {alert.minutesWaiting}m against a {alert.safeWaitMinutes}m
                       limit
+                    </>
+                  )}
+                  {alert.kind === 'patient_reported_worse' && (
+                    <>
+                      {' '}
+                      · token {alert.tokenNumber ?? '—'} · ESI {alert.esi} · waiting {alert.minutesWaiting}m — go and see them
                     </>
                   )}
                   {alert.kind === 'deterioration' && (

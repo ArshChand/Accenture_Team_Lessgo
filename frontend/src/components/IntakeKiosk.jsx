@@ -41,7 +41,8 @@ const SCRIPTS = {
 const SpeechRecognition =
   typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
-export function IntakeKiosk({ onArrival }) {
+export function IntakeKiosk({ onArrival, mode = 'staff' }) {
+  const isPatient = mode === 'patient';
   const [language, setLanguage] = useState('kn-IN');
   const [transcript, setTranscript] = useState('');
   const [asrConfidence, setAsrConfidence] = useState(0.9);
@@ -54,6 +55,7 @@ export function IntakeKiosk({ onArrival }) {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [viaProxy, setViaProxy] = useState(false);
   const recognitionRef = useRef(null);
 
   /**
@@ -139,13 +141,15 @@ export function IntakeKiosk({ onArrival }) {
         ageYears: Number(age),
         chiefComplaint: complaint || transcript.slice(0, 60) || 'unspecified',
         mode: 'walk_in',
+        viaProxy,
         transcripts: transcript
           ? [{ language, rawText: transcript, asrConfidence, captureMode: SpeechRecognition ? 'web_speech' : 'scripted' }]
           : [],
       });
 
-      setResult(encounter);
-      onArrival?.(String(encounter._id));
+      if (!isPatient) setResult(encounter);
+      onArrival?.(String(encounter._id), encounter);
+      setViaProxy(false);
       setTranscript('');
       setComplaint('');
       setPhone('');
@@ -161,8 +165,12 @@ export function IntakeKiosk({ onArrival }) {
   return (
     <div className="kiosk">
       <header className="kiosk__head">
-        <h2>Patient intake</h2>
-        <p>Speak your symptoms in your own language. A nurse will review everything.</p>
+        <h2>{isPatient ? 'Tell us what is wrong' : 'Patient intake'}</h2>
+        <p>
+          {isPatient
+            ? 'Speak in your own language. No sign-in needed — a nurse reviews everything you say.'
+            : 'Speak your symptoms in your own language. A nurse will review everything.'}
+        </p>
       </header>
 
       <form onSubmit={submit} className="kiosk__form">
@@ -197,7 +205,7 @@ export function IntakeKiosk({ onArrival }) {
         </div>
 
         <div className="kiosk__scripts">
-          <span className="kiosk__scripts-label">Example utterances</span>
+          <span className="kiosk__scripts-label">{isPatient ? 'Or tap an example' : 'Example utterances'}</span>
           {(SCRIPTS[language] ?? []).map((script) => (
             <button key={script.text} type="button" className="kiosk__script" onClick={() => useScript(script)}>
               <span className="kiosk__script-text">{script.text}</span>
@@ -210,10 +218,12 @@ export function IntakeKiosk({ onArrival }) {
         <label className="field">
           <span className="field__label">Transcript</span>
           <textarea rows={3} value={transcript} onChange={(e) => setTranscript(e.target.value)} />
-          <span className="field__hint">
-            Speech recognition confidence {Math.round(asrConfidence * 100)}% — a low figure makes the
-            assistant more cautious, not less.
-          </span>
+          {!isPatient && (
+            <span className="field__hint">
+              Speech recognition confidence {Math.round(asrConfidence * 100)}% — a low figure makes the
+              assistant more cautious, not less.
+            </span>
+          )}
         </label>
 
         <div className="kiosk__grid">
@@ -255,10 +265,15 @@ export function IntakeKiosk({ onArrival }) {
             </button>
           </div>
           <span className="field__hint">
-            Looks up the hospital's own patient record system — separate from this app's database, and
-            read-only. A match pre-fills baselines and chronic conditions the assistant can use; nothing
-            is written back.
+            {isPatient
+              ? 'If you have been to this hospital before, we can use your existing record.'
+              : "Looks up the hospital's own patient record system — separate from this app's database, and read-only. A match pre-fills baselines and chronic conditions the assistant can use; nothing is written back."}
           </span>
+        </label>
+
+        <label className="kiosk__proxy">
+          <input type="checkbox" checked={viaProxy} onChange={(e) => setViaProxy(e.target.checked)} />
+          <span>I am filling this in for someone else (family member or attendant)</span>
         </label>
 
         {hisLookupState === 'found' && hisMatch && (

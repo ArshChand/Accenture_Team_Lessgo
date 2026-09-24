@@ -43,7 +43,17 @@ Then, in another terminal:
 npm run seed       # 20 curated patients, each self-checked
 ```
 
-Open **http://localhost:5173**.
+Open **http://localhost:5173** and choose who is using the screen:
+
+| Role | Access | Sees |
+|---|---|---|
+| Patient (or attendant) | no sign-in | intake, then a token number and an "I feel worse" button |
+| Nurse / triage staff | PIN `1234` | triage board, intake, alerts, audit trail |
+| ED head | PIN `4321` | command centre: resources, metrics, capacity, surge |
+
+The PINs are a prototype stand-in for badge tap-in and choose the view only;
+they are not API authentication. Change them with `STAFF_PIN_NURSE` and
+`STAFF_PIN_ED_HEAD`.
 
 To run against a real MongoDB instead, set `DB_DRIVER=mongo` and `MONGO_URI`.
 Everything below behaves identically.
