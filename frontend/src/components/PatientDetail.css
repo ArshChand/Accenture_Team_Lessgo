@@ -445,3 +445,13 @@
   font-size: var(--text-xs);
   margin-bottom: var(--sp-1);
 }
+
+.detail__worse {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--status-critical);
+  background: var(--wash-critical);
+  color: var(--ink);
+  font-size: var(--text-sm);
+}
