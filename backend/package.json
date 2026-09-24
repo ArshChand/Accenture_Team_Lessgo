@@ -10,6 +10,7 @@
     "seed": "node scripts/seed.js",
     "demo:surge": "node scripts/demoSurge.js",
     "demo:override": "node scripts/demoOverride.js",
+    "demo:arrivals": "node scripts/demoArrivals.js",
     "test": "node --test \"test/**/*.test.js\""
   },
   "dependencies": {

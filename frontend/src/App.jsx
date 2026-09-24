@@ -62,6 +62,12 @@ export default function App() {
   return <StaffDashboard key={role} role={role} theme={theme} setTheme={setTheme} onSwitchRole={switchRole} />;
 }
 
+/**
+ * Each role sees only what it acts on. A nurse on shift works the queue and its
+ * alerts and needs to know whether a bed is free; stock forecasting and model
+ * governance belong to whoever runs the department. The ED head's Resources view
+ * carries the bed board as well, so Capacity is not a separate tab for them.
+ */
 const ROLE_VIEW = {
   nurse: {
     label: 'Nurse',
@@ -69,13 +75,10 @@ const ROLE_VIEW = {
       { id: 'board', label: 'Triage board' },
       { id: 'intake', label: 'Patient intake' },
       { id: 'audit', label: 'Audit trail' },
-      { id: 'model', label: 'Model & protocol' },
     ],
-    boardOrder: ['queue', 'metrics', 'alerts', 'capacity', 'resources'],
+    boardOrder: ['queue', 'alerts', 'metrics', 'capacity'],
     defaultBoardTab: 'queue',
   },
-  // The ED head runs the department rather than triaging individuals, so the
-  // board opens on resources and intake is not on offer.
   ed_head: {
     label: 'ED head',
     tabs: [
@@ -83,14 +86,16 @@ const ROLE_VIEW = {
       { id: 'audit', label: 'Audit trail' },
       { id: 'model', label: 'Model & protocol' },
     ],
-    boardOrder: ['resources', 'metrics', 'capacity', 'alerts', 'queue'],
+    boardOrder: ['resources', 'metrics', 'alerts', 'queue'],
     defaultBoardTab: 'resources',
+    capacityInResources: true,
   },
 };
 
 function StaffDashboard({ role, theme, setTheme, onSwitchRole }) {
   const view = ROLE_VIEW[role];
   const TABS = view.tabs;
+  const showsBoardTab = (id) => view.boardOrder.includes(id);
   const queue = useQueue();
   const [tab, setTab] = useState('board');
   const [boardSubTab, setBoardSubTab] = useState(view.defaultBoardTab);
@@ -200,6 +205,16 @@ function StaffDashboard({ role, theme, setTheme, onSwitchRole }) {
     bumpRefresh();
   }, [queue, bumpRefresh]);
 
+  const capacityPanel = (
+    <CapacityPanel
+      transport={queue.transport}
+      lastUpdateAt={queue.lastUpdateAt}
+      beds={beds}
+      bedsUnreachable={bedsUnreachable}
+      capacityDebtMinutes={queue.capacityDebtMinutes}
+    />
+  );
+
   return (
     <div className="app">
       <header className="app__header glass">
@@ -301,19 +316,23 @@ function StaffDashboard({ role, theme, setTheme, onSwitchRole }) {
               <AlertFeed alerts={queue.alerts} onSelect={selectFromAlert} onDismiss={queue.dismissAlert} />
             </div>
 
-            <div hidden={boardSubTab !== 'capacity'} className="board-panel">
-              <CapacityPanel
-                transport={queue.transport}
-                lastUpdateAt={queue.lastUpdateAt}
-                beds={beds}
-                bedsUnreachable={bedsUnreachable}
-                capacityDebtMinutes={queue.capacityDebtMinutes}
-              />
-            </div>
+            {showsBoardTab('capacity') && (
+              <div hidden={boardSubTab !== 'capacity'} className="board-panel">
+                {capacityPanel}
+              </div>
+            )}
 
-            <div hidden={boardSubTab !== 'resources'} className="board-panel">
-              <ResourcesPanel onSummary={handleResourceSummary} />
-            </div>
+            {showsBoardTab('resources') && (
+              <div hidden={boardSubTab !== 'resources'} className="board-panel">
+                <ResourcesPanel onSummary={handleResourceSummary} />
+                {view.capacityInResources && (
+                  <section className="board-panel__section">
+                    <h2 className="board-panel__heading">Beds and connection</h2>
+                    {capacityPanel}
+                  </section>
+                )}
+              </div>
+            )}
           </>
         )}
 

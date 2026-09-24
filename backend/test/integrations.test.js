@@ -60,8 +60,20 @@ describe('hospitalSystems adapter', () => {
     }
   });
 
-  it('drifts occupancy by at most one bed per department per call, never past capacity', async () => {
+  it('holds the bed board still by default, so only patients move the forecast', async () => {
     const adapter = createMockHospitalSystemsAdapter({ latencyMs: 0 });
+    const reads = [];
+    for (let i = 0; i < 5; i += 1) reads.push(await adapter.getBedAvailability());
+    for (const read of reads.slice(1)) {
+      assert.deepEqual(
+        read.departments.map((d) => d.occupied),
+        reads[0].departments.map((d) => d.occupied),
+      );
+    }
+  });
+
+  it('when drift is on, moves occupancy by at most one bed per department per call, never past capacity', async () => {
+    const adapter = createMockHospitalSystemsAdapter({ latencyMs: 0, drift: true });
     const first = await adapter.getBedAvailability();
     const second = await adapter.getBedAvailability();
     for (const before of first.departments) {

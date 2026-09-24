@@ -10,15 +10,9 @@
  * Usage:  npm run seed          (backend must be running)
  */
 
+import { CLINICIANS } from './data/clinicians.js';
 import { CURATED_PATIENTS, EDGE_CASE_COVERAGE } from './data/curatedPatients.js';
 import { c, esiTag, get, post, requireBackend, rule, sleep, warnIfMlDown } from './lib/client.js';
-
-const CLINICIANS = [
-  { name: 'Nurse Priya R.', role: 'triage_nurse', registrationNumber: 'KA-NUR-88214', shift: 'day' },
-  { name: 'Nurse Sunita M.', role: 'charge_nurse', registrationNumber: 'KA-NUR-71903', shift: 'day' },
-  { name: 'Dr A. Rao', role: 'physician', registrationNumber: 'KA-MED-40122', shift: 'day' },
-  { name: 'Dr Sharma', role: 'physician', registrationNumber: 'KA-MED-51877', shift: 'night' },
-];
 
 async function seedOne(patient) {
   const { patient: created } = await post('/patients', {

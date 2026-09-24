@@ -48,8 +48,8 @@ Open **http://localhost:5173** and choose who is using the screen:
 | Role | Access | Sees |
 |---|---|---|
 | Patient (or attendant) | no sign-in | intake, then a token number and an "I feel worse" button |
-| Nurse / triage staff | PIN `1234` | triage board, intake, alerts, audit trail |
-| ED head | PIN `4321` | command centre: resources, metrics, capacity, surge |
+| Nurse / triage staff | PIN `1234` | queue, alerts, metrics, bed capacity, intake, audit trail |
+| ED head | PIN `4321` | command centre: resources and beds, metrics, alerts, queue; audit; model & protocol |
 
 The PINs are a prototype stand-in for badge tap-in and choose the view only;
 they are not API authentication. Change them with `STAFF_PIN_NURSE` and
@@ -66,7 +66,14 @@ Everything below behaves identically.
 npm run seed            # 20 patients covering every edge case in the brief
 npm run demo:surge      # 3x arrival volume
 npm run demo:override   # override friction and the audit trail
+npm run demo:arrivals   # 5 patients, one a minute, minor to critical
 ```
+
+`demo:arrivals` is built for the ED head's Resources view: start the backend
+fresh (no seed), open that view, and each arrival visibly adds to the forecast
+and brings in the recommendations its findings justify. Pass `-- --interval 20`
+to shorten the gap. Bed counts hold still so that every change on screen comes
+from a patient; set `MOCK_BED_DRIFT=true` to let the mock bed board wander.
 
 **What to look at, in order:**
 
@@ -98,7 +105,7 @@ npm run demo:override   # override friction and the audit trail
 6. **Audit trail → Verify chain integrity** — walks every event and recomputes its
    hash.
 
-7. **Model & protocol** — the under-triage rate and declared limitations,
+7. **Model & protocol** (ED head view) — the under-triage rate and declared limitations,
    published to the person being asked to trust them.
 
 To watch decay happen without waiting 40 real minutes:

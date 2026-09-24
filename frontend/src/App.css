@@ -22,7 +22,7 @@
 }
 
 /**
- * The board's four sub-tabs stay mounted and are toggled with the native
+ * The board's sub-tabs stay mounted and are toggled with the native
  * `hidden` attribute rather than unmounted (see App.jsx) — that's what lets
  * a half-typed search query or an in-progress action survive a tab switch.
  * But `hidden`'s default `display: none` is only as specific as any class
@@ -238,6 +238,19 @@
   margin: 0 auto;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+.board-panel__section {
+  margin-top: var(--sp-5);
+}
+
+.board-panel__heading {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
 }
 
 .app__placeholder {
