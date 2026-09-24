@@ -9,8 +9,8 @@ import './BoardTabs.css';
  * now lives behind its own tab, so the working view stays about the one
  * thing a nurse is actually doing between patients: looking at the queue.
  *
- * Nothing here unmounts on switch — see App.jsx, which keeps all four
- * sub-views mounted and toggles visibility with the `hidden` attribute. A
+ * Nothing here unmounts on switch — see App.jsx, which keeps every
+ * sub-view mounted and toggles visibility with the `hidden` attribute. A
  * search query typed into the queue's own filter, or a promotion form
  * half-filled in the detail panel, survives a trip to another tab and back.
  *
@@ -23,12 +23,14 @@ const BOARD_TABS = [
   { id: 'metrics', label: 'Metrics' },
   { id: 'alerts', label: 'Alerts' },
   { id: 'capacity', label: 'Capacity' },
+  { id: 'resources', label: 'Resources' },
 ];
 
-export function BoardTabs({ active, onChange, alertCount = 0, breachedCount = 0 }) {
+export function BoardTabs({ active, onChange, alertCount = 0, breachedCount = 0, shortageCount = 0 }) {
   const badgeFor = (id) => {
     if (id === 'alerts' && alertCount > 0) return alertCount;
     if (id === 'metrics' && breachedCount > 0) return breachedCount;
+    if (id === 'resources' && shortageCount > 0) return shortageCount;
     return null;
   };
 
