@@ -1,0 +1,10 @@
+# Render Blueprint: New → Blueprint → pick this repo. Builds the root Dockerfile.
+services:
+  - type: web
+    name: triagehandler
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: SEED_ON_START
+        value: "true"

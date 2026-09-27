@@ -78,6 +78,12 @@ export const config = {
   },
 
   /**
+   * A built frontend to serve from this same process, so a deployment is one
+   * service on one URL. Unset in development, where Vite serves the app.
+   */
+  staticDir: process.env.STATIC_DIR ?? '',
+
+  /**
    * Staff PINs for the role picker — a prototype stand-in for badge tap-in or
    * SSO. They gate which dashboard a device opens, not the API itself; a real
    * deployment authenticates every route. Override both in any shared setting.
