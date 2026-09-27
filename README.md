@@ -257,7 +257,7 @@ docs/             architecture · data model · safety case · compliance
 ## Tests
 
 ```bash
-npm test                                          # 198 backend tests
+npm test                                          # 232 backend tests
 npm run test:ml                                   # 47 ML-service tests
 ```
 
