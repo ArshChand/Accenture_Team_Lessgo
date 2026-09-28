@@ -144,9 +144,9 @@ export function ResourcesPanel({ onSummary }) {
                 {flagged.map((row) => (
                   <tr key={row.resourceId}>
                     <td>{row.label}</td>
-                    <td className="tabular">{row.available}</td>
-                    <td className="tabular">{row.expectedDemand}</td>
-                    <td className="tabular">{row.gap > 0 ? `${row.gap} ${row.unit}` : '—'}</td>
+                    <td className="tabular" data-label="Available">{row.available}</td>
+                    <td className="tabular" data-label="Expected need">{row.expectedDemand}</td>
+                    <td className="tabular" data-label="Gap">{row.gap > 0 ? `${row.gap} ${row.unit}` : '—'}</td>
                     <td>
                       <StatusChip status={row.status} />
                     </td>
@@ -186,12 +186,12 @@ export function ResourcesPanel({ onSummary }) {
                       {item.adjustable ? ` · par ${item.parLevel}` : ' · from bed system'}
                     </div>
                   </td>
-                  <td className="tabular">
+                  <td className="tabular" data-label="In stock">
                     {item.available == null ? '—' : item.available}
                     {item.capacity != null && <span className="inv__of"> / {item.capacity}</span>}
                   </td>
-                  <td className="tabular">{demand?.expectedDemand ?? 0}</td>
-                  <td className="inv__patients">
+                  <td className="tabular" data-label="Predicted need">{demand?.expectedDemand ?? 0}</td>
+                  <td className="inv__patients" data-label="Likely patients">
                     {likely.length === 0 ? '—' : `${likely.slice(0, 3).join(', ')}${likely.length > 3 ? ` +${likely.length - 3}` : ''}`}
                   </td>
                   <td>

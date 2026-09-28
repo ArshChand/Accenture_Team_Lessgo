@@ -16,6 +16,8 @@ import { PatientKiosk } from './components/PatientKiosk.jsx';
 import './App.css';
 
 const ROLE_KEY = 'triagehandler.role';
+/** Matches the phone breakpoint in App.css. */
+const PHONE_QUERY = '(max-width: 760px)';
 const ROLES = ['patient', 'nurse', 'ed_head'];
 
 function readRole() {
@@ -171,6 +173,13 @@ function StaffDashboard({ role, theme, setTheme, onSwitchRole }) {
     if (!queue.encounters.some((e) => String(e._id) === selectedId)) setSelectedId(null);
   }, [queue.encounters, selectedId]);
 
+  // On a phone the patient view replaces the list rather than sitting below
+  // it, so opening a patient has to bring the page to the top of that view.
+  useEffect(() => {
+    if (!selectedId || !window.matchMedia?.(PHONE_QUERY).matches) return;
+    document.querySelector('.app__board-back')?.scrollIntoView({ block: 'start' });
+  }, [selectedId]);
+
   const openOverride = (encounter, assessment) => setOverrideTarget({ encounter, assessment });
 
   const submitOverride = async (payload) => {
@@ -281,7 +290,14 @@ function StaffDashboard({ role, theme, setTheme, onSwitchRole }) {
               form — conditionally rendering them out of the tree on every tab
               change would silently reset both the moment a nurse looked away.
             */}
-            <div hidden={boardSubTab !== 'queue'} className="app__board-layout">
+            <div
+              hidden={boardSubTab !== 'queue'}
+              className={`app__board-layout ${selectedId ? 'has-selection' : ''}`}
+            >
+              {/* Phone only (see App.css): the way back from a patient to the list. */}
+              <button type="button" className="app__board-back" onClick={() => setSelectedId(null)}>
+                ← Back to queue
+              </button>
               <div className="app__board-main">
                 <QueueBoard
                   encounters={queue.encounters}
