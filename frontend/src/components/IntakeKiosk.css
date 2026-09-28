@@ -250,3 +250,17 @@
   background: var(--surface-sunken);
   color: var(--ink-secondary);
 }
+
+.kiosk__proxy {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.kiosk__proxy input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}

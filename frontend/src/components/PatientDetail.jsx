@@ -107,6 +107,16 @@ export function PatientDetail({
         <DecayIndicator queue={encounter.queue} />
       </div>
 
+      {/* Kept on the record, not only in the dismissible alert feed: a nurse
+          opening this patient later still needs to know they asked for help. */}
+      {encounter.patientReportedWorseningAt && (
+        <p className="detail__worse">
+          <strong>Patient reported feeling worse</strong> at{' '}
+          {new Date(encounter.patientReportedWorseningAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {encounter.tokenNumber != null && ` · token ${encounter.tokenNumber}`}
+        </p>
+      )}
+
       {latest?.mode && latest.mode !== 'full' && (
         <p className="detail__degraded">{MODE_COPY[latest.mode]}</p>
       )}

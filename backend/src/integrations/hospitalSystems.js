@@ -1,3 +1,5 @@
+import { config } from '../config/index.js';
+
 /**
  * The boundary between TriageHandler and the rest of a hospital's IT estate.
  *
@@ -74,11 +76,12 @@ const MOCK_EXTERNAL_RECORDS = [
   },
 ];
 
+/** `occupied` is the fixed starting state, so every demo run opens on the same board. */
 const BED_DEPARTMENTS = [
-  { name: 'Resuscitation', capacity: 4 },
-  { name: 'Majors', capacity: 18 },
-  { name: 'Minors', capacity: 12 },
-  { name: 'Paediatric bay', capacity: 6 },
+  { name: 'Resuscitation', capacity: 4, occupied: 2 },
+  { name: 'Majors', capacity: 18, occupied: 12 },
+  { name: 'Minors', capacity: 12, occupied: 7 },
+  { name: 'Paediatric bay', capacity: 6, occupied: 3 },
 ];
 
 const normalisePhone = (value) => String(value ?? '').replace(/\D/g, '');
@@ -95,17 +98,15 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * @param {object} [opts]
  * @param {number} [opts.latencyMs] simulated round-trip time to the hospital's system
  * @param {number} [opts.failureRate] 0–1, chance any call throws `hospital_system_unreachable`
+ * @param {boolean} [opts.drift] let occupancy wander by a bed per read
  * @returns {HospitalSystemsAdapter}
  */
-export function createMockHospitalSystemsAdapter({ latencyMs = 120, failureRate = 0 } = {}) {
-  // A slowly-drifting baseline per department, seeded once at adapter
-  // creation. Bed occupancy that never moves reads as an obviously fake demo;
-  // occupancy that jumps randomly on every poll reads as broken. A small
-  // random walk, clamped to capacity, gives a live-looking board without
-  // either failure mode.
-  const occupancy = new Map(
-    BED_DEPARTMENTS.map((dept) => [dept.name, Math.round(dept.capacity * (0.55 + Math.random() * 0.25))]),
-  );
+export function createMockHospitalSystemsAdapter({ latencyMs = 120, failureRate = 0, drift = false } = {}) {
+  // Static by default. Beds that change with no patient behind the change make
+  // a forecast impossible to follow — a viewer cannot tell which movements were
+  // caused by an arrival and which were noise. Drift remains available as an
+  // opt-in for soak-testing the dashboard against a changing bed board.
+  const occupancy = new Map(BED_DEPARTMENTS.map((dept) => [dept.name, dept.occupied]));
 
   const maybeFail = async () => {
     if (latencyMs > 0) await wait(latencyMs);
@@ -131,7 +132,7 @@ export function createMockHospitalSystemsAdapter({ latencyMs = 120, failureRate 
     async getBedAvailability() {
       await maybeFail();
       const departments = BED_DEPARTMENTS.map((dept) => {
-        const step = Math.round(Math.random() * 2) - 1; // -1, 0, or 1
+        const step = drift ? Math.round(Math.random() * 2) - 1 : 0; // -1, 0, or 1
         const occupied = Math.max(0, Math.min(dept.capacity, occupancy.get(dept.name) + step));
         occupancy.set(dept.name, occupied);
         return { name: dept.name, capacity: dept.capacity, occupied, available: dept.capacity - occupied };
@@ -142,7 +143,7 @@ export function createMockHospitalSystemsAdapter({ latencyMs = 120, failureRate 
 }
 
 /** The instance every route and demo script shares — swap this line in a real deployment. */
-export const hospitalSystems = createMockHospitalSystemsAdapter();
+export const hospitalSystems = createMockHospitalSystemsAdapter({ drift: config.mockBeds.drift });
 
 /** Exported for tests and demos that want a known phone/ABHA id to look up. */
 export const MOCK_LOOKUPS = MOCK_EXTERNAL_RECORDS.map(({ phone, abhaId, displayRef }) => ({

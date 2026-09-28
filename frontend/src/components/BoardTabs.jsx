@@ -26,7 +26,8 @@ const BOARD_TABS = [
   { id: 'resources', label: 'Resources' },
 ];
 
-export function BoardTabs({ active, onChange, alertCount = 0, breachedCount = 0, shortageCount = 0 }) {
+export function BoardTabs({ active, onChange, alertCount = 0, breachedCount = 0, shortageCount = 0, order }) {
+  const tabs = order ? order.map((id) => BOARD_TABS.find((entry) => entry.id === id)).filter(Boolean) : BOARD_TABS;
   const badgeFor = (id) => {
     if (id === 'alerts' && alertCount > 0) return alertCount;
     if (id === 'metrics' && breachedCount > 0) return breachedCount;
@@ -36,7 +37,7 @@ export function BoardTabs({ active, onChange, alertCount = 0, breachedCount = 0,
 
   return (
     <nav className="board-tabs" aria-label="Dashboard sections">
-      {BOARD_TABS.map((entry) => {
+      {tabs.map((entry) => {
         const badge = badgeFor(entry.id);
         return (
           <button

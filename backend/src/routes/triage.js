@@ -21,6 +21,8 @@ import { extractSymptoms, fetchModelInfo } from '../services/mlClient.js';
 import { recordPhiAccess, verifyAuditChain } from '../services/auditService.js';
 import { safeWaitMinutesWith } from '../clinical/protocol.js';
 import { predictForEncounter } from '../operations/overview.js';
+import { nextTokenNumber, reportWorsening } from '../services/patientFacing.js';
+import { emit } from '../realtime/bus.js';
 
 /**
  * HTTP surface for triage.
@@ -125,6 +127,7 @@ export function triageRoutes() {
         zone,
         intake: { transcripts, extraction, viaProxy, completedAt: new Date() },
         status: ENCOUNTER_STATUS.WAITING,
+        tokenNumber: await nextTokenNumber(),
       });
 
       // A patient waits on the queue's own clock the instant they register, so
@@ -177,6 +180,26 @@ export function triageRoutes() {
         vitals,
         predictedResources: predictForEncounter(encounter, assessments[0]),
       });
+    }),
+  );
+
+  /**
+   * The waiting-area "I feel worse" button. Open to the kiosk by design — a
+   * patient must never need credentials to ask for help.
+   */
+  router.post(
+    '/encounters/:id/report-worse',
+    asyncRoute(async (req, res) => {
+      try {
+        const { encounter, alert } = await reportWorsening({ encounterId: req.params.id });
+        emit('patient:alert', alert);
+        return res.json({ reported: true, tokenNumber: encounter.tokenNumber, reportedAt: encounter.patientReportedWorseningAt });
+      } catch (error) {
+        if (error.status === 429) {
+          return res.status(429).json({ error: 'already_reported', message: error.message, reportedAt: error.alreadyReportedAt });
+        }
+        throw error;
+      }
     }),
   );
 

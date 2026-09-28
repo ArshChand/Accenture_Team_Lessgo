@@ -14,6 +14,7 @@ import { queueRoutes } from './routes/queue.js';
 import { simulationRoutes } from './routes/simulation.js';
 import { integrationsRoutes } from './routes/integrations.js';
 import { resourcesRoutes } from './routes/resources.js';
+import { staffRoutes } from './routes/staff.js';
 
 export function createApp() {
   const app = express();
@@ -86,6 +87,7 @@ export function createApp() {
   app.use('/api', simulationRoutes({ enabled: config.simulation.enabled }));
   app.use('/api', integrationsRoutes());
   app.use('/api', resourcesRoutes());
+  app.use('/api', staffRoutes());
 
   app.use((req, res) => {
     res.status(404).json({ error: 'not_found', path: req.path });

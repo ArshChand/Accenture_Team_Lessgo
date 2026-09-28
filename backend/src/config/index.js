@@ -70,6 +70,24 @@ export const config = {
   },
 
   /**
+   * The mock bed board holds still unless asked to drift, so that every change
+   * a viewer sees on the Resources view is caused by a patient.
+   */
+  mockBeds: {
+    drift: process.env.MOCK_BED_DRIFT === 'true',
+  },
+
+  /**
+   * Staff PINs for the role picker — a prototype stand-in for badge tap-in or
+   * SSO. They gate which dashboard a device opens, not the API itself; a real
+   * deployment authenticates every route. Override both in any shared setting.
+   */
+  staffPins: {
+    nurse: process.env.STAFF_PIN_NURSE ?? '1234',
+    ed_head: process.env.STAFF_PIN_ED_HEAD ?? '4321',
+  },
+
+  /**
    * Assumed regulatory jurisdiction. Drives audit event required fields, consent
    * artifact shape, and retention classes. See docs/compliance.md.
    */

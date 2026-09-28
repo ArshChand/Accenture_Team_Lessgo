@@ -4,6 +4,7 @@ import { config } from './config/index.js';
 import { connectDatabase, disconnectDatabase } from './db/index.js';
 import { activateProtocol } from './services/protocolService.js';
 import { createSocketServer } from './realtime/socket.js';
+import { bindEmitter } from './realtime/bus.js';
 import { TriageEngine } from './queue/engine.js';
 
 async function main() {
@@ -22,6 +23,7 @@ async function main() {
   const server = http.createServer(app);
 
   const { emit } = createSocketServer(server);
+  bindEmitter(emit);
 
   // The queue engine is the running form of "Continuous Re-Triage": it ticks on
   // its own schedule regardless of HTTP traffic, so a patient deteriorates on the

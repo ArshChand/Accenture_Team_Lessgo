@@ -59,6 +59,9 @@ export const api = {
 
   advanceTime: (payload) => request('/simulate/advance-time', { method: 'POST', body: JSON.stringify(payload) }),
 
+  staffSession: (role, pin) => request('/staff/session', { method: 'POST', body: JSON.stringify({ role, pin }) }),
+  reportWorse: (encounterId) => request(`/encounters/${encounterId}/report-worse`, { method: 'POST' }),
+
   resourceOverview: () => request('/resources/overview'),
   adjustStock: (resourceId, delta) =>
     request(`/resources/inventory/${resourceId}/adjust`, { method: 'POST', body: JSON.stringify({ delta }) }),

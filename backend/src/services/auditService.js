@@ -625,6 +625,26 @@ export async function recordWaitBreach({ encounter, safeWaitMinutes, waitedMinut
   });
 }
 
+/**
+ * A patient saying they feel worse. Recorded because "the patient told us and
+ * nobody came" is exactly the question an incident review asks.
+ */
+export async function recordPatientReportedWorsening({ encounter, waitedMinutes }) {
+  return appendAuditEvent({
+    eventType: AUDIT_EVENT_TYPE.PATIENT_REPORTED_WORSENING,
+    actor: { name: 'Patient self-report (waiting area)', role: 'admin', registrationNumber: 'PATIENT' },
+    subject: {
+      encounterRef: encounter._id,
+      patientRef: encounter.patientRef,
+      displayRef: encounter.displayRef,
+    },
+    before: { esi: encounter.currentESI },
+    after: { waitedMinutes: Math.round(waitedMinutes), tokenNumber: encounter.tokenNumber ?? null },
+    purpose: 'clinical_care',
+    retentionClass: RETENTION_CLASS.OPERATIONAL,
+  });
+}
+
 /** The department entering or leaving surge. */
 export async function recordSurgeChange({ state, metrics, policyApplied }) {
   return appendAuditEvent({

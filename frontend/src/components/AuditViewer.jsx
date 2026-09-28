@@ -17,6 +17,7 @@ const EVENT_COPY = {
   TRIAGE_OVERRIDE: 'Clinician override',
   ACCESS_PHI: 'Identifying data revealed',
   WAIT_THRESHOLD_BREACHED: 'Safe wait exceeded',
+  PATIENT_REPORTED_WORSENING: 'Patient reported feeling worse',
   SURGE_STATE_CHANGED: 'Surge state changed',
   CORRECTION: 'Correction',
 };

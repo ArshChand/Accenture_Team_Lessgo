@@ -11,24 +11,98 @@ import { AlertFeed } from './components/AlertFeed.jsx';
 import { AuditViewer } from './components/AuditViewer.jsx';
 import { IntakeKiosk } from './components/IntakeKiosk.jsx';
 import { VitalsPanel } from './components/VitalsPanel.jsx';
+import { RoleSelect } from './components/RoleSelect.jsx';
+import { PatientKiosk } from './components/PatientKiosk.jsx';
 import './App.css';
 
-const TABS = [
-  { id: 'board', label: 'Triage board' },
-  { id: 'intake', label: 'Patient intake' },
-  { id: 'audit', label: 'Audit trail' },
-  { id: 'model', label: 'Model & protocol' },
-];
+const ROLE_KEY = 'triagehandler.role';
+const ROLES = ['patient', 'nurse', 'ed_head'];
 
+function readRole() {
+  try {
+    const role = window.sessionStorage.getItem(ROLE_KEY);
+    return ROLES.includes(role) ? role : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeRole(role) {
+  try {
+    if (role) window.sessionStorage.setItem(ROLE_KEY, role);
+    else window.sessionStorage.removeItem(ROLE_KEY);
+  } catch {
+    // Unavailable storage just means a refresh returns to the role picker.
+  }
+}
+
+/**
+ * Who is using this screen decides what it shows. A patient gets intake and a
+ * token and nothing else; a nurse gets the working dashboard; the ED head gets
+ * the department-level view. Remembered for the browser tab only, so a shared
+ * kiosk does not stay in a staff view after the tab is closed.
+ */
 export default function App() {
+  const [role, setRole] = useState(readRole);
+  const [theme, setTheme] = useState('system');
+
+  useEffect(() => {
+    if (theme === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const choose = (next) => {
+    writeRole(next);
+    setRole(next);
+  };
+  const switchRole = () => choose(null);
+
+  if (!role) return <RoleSelect onChoose={choose} />;
+  if (role === 'patient') return <PatientKiosk onSwitchRole={switchRole} />;
+  return <StaffDashboard key={role} role={role} theme={theme} setTheme={setTheme} onSwitchRole={switchRole} />;
+}
+
+/**
+ * Each role sees only what it acts on. A nurse on shift works the queue and its
+ * alerts and needs to know whether a bed is free; stock forecasting and model
+ * governance belong to whoever runs the department. The ED head's Resources view
+ * carries the bed board as well, so Capacity is not a separate tab for them.
+ */
+const ROLE_VIEW = {
+  nurse: {
+    label: 'Nurse',
+    tabs: [
+      { id: 'board', label: 'Triage board' },
+      { id: 'intake', label: 'Patient intake' },
+      { id: 'audit', label: 'Audit trail' },
+    ],
+    boardOrder: ['queue', 'alerts', 'metrics', 'capacity'],
+    defaultBoardTab: 'queue',
+  },
+  ed_head: {
+    label: 'ED head',
+    tabs: [
+      { id: 'board', label: 'Command centre' },
+      { id: 'audit', label: 'Audit trail' },
+      { id: 'model', label: 'Model & protocol' },
+    ],
+    boardOrder: ['resources', 'metrics', 'alerts', 'queue'],
+    defaultBoardTab: 'resources',
+    capacityInResources: true,
+  },
+};
+
+function StaffDashboard({ role, theme, setTheme, onSwitchRole }) {
+  const view = ROLE_VIEW[role];
+  const TABS = view.tabs;
+  const showsBoardTab = (id) => view.boardOrder.includes(id);
   const queue = useQueue();
   const [tab, setTab] = useState('board');
-  const [boardSubTab, setBoardSubTab] = useState('queue');
+  const [boardSubTab, setBoardSubTab] = useState(view.defaultBoardTab);
   const [selectedId, setSelectedId] = useState(null);
   const [clinicians, setClinicians] = useState([]);
   const [overrideTarget, setOverrideTarget] = useState(null);
   const [refreshToken, setRefreshToken] = useState(0);
-  const [theme, setTheme] = useState('system');
   const [beds, setBeds] = useState(null);
   const [bedsUnreachable, setBedsUnreachable] = useState(false);
   const [resourceShortCount, setResourceShortCount] = useState(0);
@@ -90,11 +164,6 @@ export default function App() {
     return () => clearInterval(timer);
   }, [loadBeds]);
 
-  useEffect(() => {
-    if (theme === 'system') document.documentElement.removeAttribute('data-theme');
-    else document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
   // Keep a selection alive as the queue reorders, but drop it if the patient
   // leaves the board entirely.
   useEffect(() => {
@@ -136,6 +205,16 @@ export default function App() {
     bumpRefresh();
   }, [queue, bumpRefresh]);
 
+  const capacityPanel = (
+    <CapacityPanel
+      transport={queue.transport}
+      lastUpdateAt={queue.lastUpdateAt}
+      beds={beds}
+      bedsUnreachable={bedsUnreachable}
+      capacityDebtMinutes={queue.capacityDebtMinutes}
+    />
+  );
+
   return (
     <div className="app">
       <header className="app__header glass">
@@ -162,6 +241,13 @@ export default function App() {
           ))}
         </nav>
 
+        <div className="app__role">
+          <span className="app__role-chip">{view.label}</span>
+          <button type="button" className="app__role-switch" onClick={onSwitchRole}>
+            Switch role
+          </button>
+        </div>
+
         <div className="app__theme">
           <label className="visually-hidden" htmlFor="theme">
             Theme
@@ -185,6 +271,7 @@ export default function App() {
               alertCount={queue.alerts.length}
               breachedCount={computeQueueStats(queue.encounters).breached}
               shortageCount={resourceShortCount}
+              order={view.boardOrder}
             />
 
             {/*
@@ -229,19 +316,23 @@ export default function App() {
               <AlertFeed alerts={queue.alerts} onSelect={selectFromAlert} onDismiss={queue.dismissAlert} />
             </div>
 
-            <div hidden={boardSubTab !== 'capacity'} className="board-panel">
-              <CapacityPanel
-                transport={queue.transport}
-                lastUpdateAt={queue.lastUpdateAt}
-                beds={beds}
-                bedsUnreachable={bedsUnreachable}
-                capacityDebtMinutes={queue.capacityDebtMinutes}
-              />
-            </div>
+            {showsBoardTab('capacity') && (
+              <div hidden={boardSubTab !== 'capacity'} className="board-panel">
+                {capacityPanel}
+              </div>
+            )}
 
-            <div hidden={boardSubTab !== 'resources'} className="board-panel">
-              <ResourcesPanel onSummary={handleResourceSummary} />
-            </div>
+            {showsBoardTab('resources') && (
+              <div hidden={boardSubTab !== 'resources'} className="board-panel">
+                <ResourcesPanel onSummary={handleResourceSummary} />
+                {view.capacityInResources && (
+                  <section className="board-panel__section">
+                    <h2 className="board-panel__heading">Beds and connection</h2>
+                    {capacityPanel}
+                  </section>
+                )}
+              </div>
+            )}
           </>
         )}
 

@@ -150,6 +150,13 @@ const EncounterSchema = new Schema(
     /** Set when the patient uses the "I feel worse" control in the waiting area. */
     patientReportedWorseningAt: { type: Date },
 
+    /**
+     * The number the patient is called by. Deliberately not their queue
+     * position: positions change as sicker patients arrive, and a patient who
+     * watches their number fall back loses trust in the queue.
+     */
+    tokenNumber: { type: Number, index: true },
+
     /** True for the synthetic surge cohort, so demo metrics can separate them out. */
     isSurgeCohort: { type: Boolean, default: false },
 
