@@ -453,3 +453,62 @@
     white-space: normal;
   }
 }
+
+/* Phone: each patient becomes a compact card — who and how urgent on the first
+   line, how long and how confident on the second — so a screen holds a queue,
+   not two patients. */
+@media (max-width: 760px) {
+  .board__head {
+    flex-wrap: wrap;
+    row-gap: var(--sp-2);
+  }
+  .board__count {
+    white-space: nowrap;
+  }
+  .board__search {
+    order: 3;
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+  .board__search-results {
+    width: 100%;
+  }
+  .board__mode {
+    order: 4;
+    flex-basis: 100%;
+    margin: 0;
+    text-align: left;
+    font-size: var(--text-xs);
+  }
+
+  .board__table tr.board__row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'who who esi'
+      'wait decay conf'
+      'by by by';
+    align-items: center;
+    column-gap: var(--sp-3);
+    row-gap: 6px;
+    padding: var(--sp-3) var(--sp-4);
+  }
+  .board__table tr.board__row > td {
+    width: auto;
+    padding: 0;
+  }
+  .board__row > td:nth-child(1) { grid-area: who; min-width: 0; }
+  .board__row > td:nth-child(2) { grid-area: esi; justify-self: end; text-align: right; }
+  .board__row > td:nth-child(3) { grid-area: wait; }
+  .board__row > td:nth-child(4) { grid-area: decay; min-width: 0; }
+  .board__row > td:nth-child(5) { grid-area: conf; justify-self: end; }
+  .board__row > td:nth-child(6) { grid-area: by; }
+  /* "Assistant" is the default and says nothing on a small screen; a nurse
+     assignment is the exception worth the line. */
+  .board__row > td:nth-child(6):not(:has(.board__by--nurse)) {
+    display: none;
+  }
+  .board__row .confidence {
+    font-size: var(--text-xs);
+  }
+}

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 import './IntakeKiosk.css';
 
@@ -41,12 +41,44 @@ const SCRIPTS = {
 const SpeechRecognition =
   typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
+// Every browser on an iPhone or iPad is WebKit underneath, and WebKit hands
+// speech to Apple's dictation service, which must be switched on in Settings.
+const IS_IOS =
+  typeof navigator !== 'undefined' &&
+  (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+const LANGUAGE_NAMES = Object.fromEntries(LANGUAGES.map((lang) => [lang.code, lang.english]));
+
+/** A plain-language reason for a recognition error, or null when there is nothing to say. */
+function speechErrorMessage(code, language) {
+  switch (code) {
+    case 'aborted':
+      return null;
+    case 'language-not-supported':
+      return `This device's speech service doesn't support ${LANGUAGE_NAMES[language] ?? 'this language'}. Tap an example below, or type what the patient says.`;
+    case 'not-allowed':
+    case 'service-not-allowed':
+      return IS_IOS
+        ? 'Speech recognition is switched off. On iPhone, turn on Settings → General → Keyboard → Enable Dictation, then allow the microphone for this site.'
+        : "Microphone access was blocked. Allow it in the browser's site settings, then tap again.";
+    case 'audio-capture':
+      return 'No microphone was found on this device.';
+    case 'network':
+      return "The speech service couldn't be reached. Check the connection, or type instead.";
+    case 'no-speech':
+    default:
+      return "Didn't catch that. Tap and speak again, or type instead.";
+  }
+}
+
 export function IntakeKiosk({ onArrival, mode = 'staff' }) {
   const isPatient = mode === 'patient';
   const [language, setLanguage] = useState('kn-IN');
   const [transcript, setTranscript] = useState('');
   const [asrConfidence, setAsrConfidence] = useState(0.9);
   const [listening, setListening] = useState(false);
+  const [speechError, setSpeechError] = useState(null);
   const [age, setAge] = useState('58');
   const [complaint, setComplaint] = useState('');
   const [phone, setPhone] = useState('');
@@ -80,25 +112,53 @@ export function IntakeKiosk({ onArrival, mode = 'staff' }) {
     }
   };
 
+  // A recognition still running when the kiosk goes away would keep the mic open.
+  useEffect(() => () => recognitionRef.current?.abort(), []);
+
   const startListening = () => {
     if (!SpeechRecognition) return;
+    recognitionRef.current?.abort();
+    setSpeechError(null);
+
     const recognition = new SpeechRecognition();
     recognition.lang = language;
-    recognition.interimResults = false;
+    // Interim results on, because iOS often ends a session without ever marking
+    // a result final; the words heard so far are kept rather than thrown away.
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
+    let heard = '';
+    let failed = false;
+
     recognition.onresult = (event) => {
-      const best = event.results[0][0];
-      setTranscript(best.transcript);
+      const results = Array.from(event.results);
+      heard = results.map((result) => result[0].transcript).join(' ').replace(/\s+/g, ' ').trim();
+      setTranscript(heard);
       // The browser's own confidence, carried through rather than assumed perfect.
-      setAsrConfidence(Number.isFinite(best.confidence) && best.confidence > 0 ? best.confidence : 0.75);
+      const scores = results
+        .filter((result) => result.isFinal && result[0].confidence > 0)
+        .map((result) => result[0].confidence);
+      setAsrConfidence(scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0.75);
     };
-    recognition.onerror = () => setListening(false);
-    recognition.onend = () => setListening(false);
+    recognition.onerror = (event) => {
+      failed = true;
+      setSpeechError(speechErrorMessage(event.error, language));
+      setListening(false);
+    };
+    recognition.onend = () => {
+      if (!heard && !failed) setSpeechError(speechErrorMessage('no-speech', language));
+      setListening(false);
+    };
 
     recognitionRef.current = recognition;
     setListening(true);
-    recognition.start();
+    // start() has to run inside the tap itself; Safari refuses it otherwise.
+    try {
+      recognition.start();
+    } catch {
+      setSpeechError("Couldn't start the microphone. Tap again, or type instead.");
+      setListening(false);
+    }
   };
 
   const stopListening = () => {
@@ -180,7 +240,10 @@ export function IntakeKiosk({ onArrival, mode = 'staff' }) {
               key={lang.code}
               type="button"
               className={`kiosk__lang ${language === lang.code ? 'is-active' : ''}`}
-              onClick={() => setLanguage(lang.code)}
+              onClick={() => {
+                setLanguage(lang.code);
+                setSpeechError(null);
+              }}
             >
               <strong>{lang.label}</strong>
               <span>{lang.english}</span>
@@ -200,6 +263,11 @@ export function IntakeKiosk({ onArrival, mode = 'staff' }) {
           ) : (
             <p className="kiosk__nospeech">
               This browser has no speech recognition. Use a scripted example below, or type.
+            </p>
+          )}
+          {speechError && (
+            <p className="kiosk__speech-error" role="status">
+              {speechError}
             </p>
           )}
         </div>

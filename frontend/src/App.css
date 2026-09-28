@@ -321,6 +321,44 @@
   .app__main {
     padding: var(--sp-3);
   }
+  /* Tabs share the width evenly rather than running off the right edge. */
+  .app__tab {
+    flex: 1 1 0;
+    padding: 6px 8px;
+    font-size: var(--text-sm);
+  }
+
+  /* A phone shows the queue or one patient, never the list with the patient
+     buried beneath it. The queue stays mounted (its search survives) — only
+     hidden while a patient is open. */
+  .app__board-layout:not(.has-selection) .app__board-side {
+    display: none;
+  }
+  .app__board-layout.has-selection .board {
+    display: none;
+  }
+  .app__board-layout.has-selection .app__board-side {
+    order: -1;
+  }
+  .app__board-layout.has-selection .app__board-back {
+    display: inline-flex;
+    order: -2;
+  }
+}
+
+.app__board-back {
+  display: none;
+  justify-self: start;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 8px 14px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  scroll-margin-top: var(--sp-3);
 }
 
 /* --------------------------------------------------------------- model panel */

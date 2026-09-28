@@ -136,6 +136,20 @@
   padding-left: var(--sp-3);
 }
 
+/* Phone: the headline and the one guarantee that matters; the policy detail
+   is still on every surge audit event and on a larger screen. */
+@media (max-width: 760px) {
+  .surge {
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .surge__policy li:not(.surge__policy-hold) {
+    display: none;
+  }
+  .surge__policy {
+    margin-top: var(--sp-1);
+  }
+}
+
 .surge__policy li::before {
   content: '';
   position: absolute;
