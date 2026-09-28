@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/.venv
+.git
+.env
+*.log
+ml-service/models/eval_set.json

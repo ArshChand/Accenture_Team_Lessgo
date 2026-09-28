@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import cors from 'cors';
 import express from 'express';
 import { config } from './config/index.js';
@@ -88,6 +90,14 @@ export function createApp() {
   app.use('/api', integrationsRoutes());
   app.use('/api', resourcesRoutes());
   app.use('/api', staffRoutes());
+
+  if (config.staticDir && existsSync(path.join(config.staticDir, 'index.html'))) {
+    app.use(express.static(config.staticDir));
+    // Any other page load gets the app shell; API and socket paths still 404 as JSON.
+    app.get(/^\/(?!api\/|socket\.io\/).*/, (req, res) => {
+      res.sendFile(path.join(config.staticDir, 'index.html'));
+    });
+  }
 
   app.use((req, res) => {
     res.status(404).json({ error: 'not_found', path: req.path });

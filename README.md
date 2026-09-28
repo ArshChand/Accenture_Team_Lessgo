@@ -58,6 +58,23 @@ they are not API authentication. Change them with `STAFF_PIN_NURSE` and
 To run against a real MongoDB instead, set `DB_DRIVER=mongo` and `MONGO_URI`.
 Everything below behaves identically.
 
+### Deploy
+
+The root `Dockerfile` packs all three services into one container on one URL:
+the backend serves the built frontend and the API, and reaches the ML service on
+localhost. On start it seeds the 20 demo patients (`SEED_ON_START=false` to
+start empty, e.g. for `demo:arrivals`).
+
+On Render: **New → Blueprint**, pick this repo; `render.yaml` does the rest.
+Any Docker host works the same way; the container listens on `$PORT`
+(default 7860).
+
+The demo scripts can drive a deployed instance from a laptop:
+
+```bash
+API_URL=https://<your-app>.onrender.com/api npm run demo:arrivals
+```
+
 ---
 
 ## The five-minute demo
@@ -240,7 +257,7 @@ docs/             architecture · data model · safety case · compliance
 ## Tests
 
 ```bash
-npm test                                          # 198 backend tests
+npm test                                          # 232 backend tests
 npm run test:ml                                   # 47 ML-service tests
 ```
 
